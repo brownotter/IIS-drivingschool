@@ -12,7 +12,7 @@ import lombok.*;
 public class Instructor extends User{
 
     @Column
-    private String teachingCategory;
+    private Category teachingCategory;
 
     @Column
     private String licenceNumber;
