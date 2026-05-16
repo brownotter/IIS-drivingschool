@@ -2,6 +2,7 @@ package com.autoskola.demo.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 
@@ -12,10 +13,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@SuperBuilder
 public class Candidate extends User{
 
     @Column
-    private String targetCategory;
+    private Category targetCategory;
 
     @Column
     private LocalDate registrationDate;
@@ -37,4 +39,5 @@ public class Candidate extends User{
 
     @Enumerated(EnumType.STRING)
     private CandidateStatus status;
+
 }
