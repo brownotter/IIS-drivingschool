@@ -1,5 +1,6 @@
 package com.autoskola.demo.dto;
 
+import com.autoskola.demo.model.Role;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -16,4 +17,6 @@ public class LoginDto {
     @NotNull(message = "Password cannot be null.")
     @NotEmpty(message = "Password cannot be empty.")
     private String password;
+
+    private Role role;
 }
