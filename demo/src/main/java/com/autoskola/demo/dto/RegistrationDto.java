@@ -7,6 +7,7 @@ import lombok.*;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class RegistrationDto {
 
     private String firstName;
