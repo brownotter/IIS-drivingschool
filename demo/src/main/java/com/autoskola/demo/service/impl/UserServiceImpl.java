@@ -1,6 +1,7 @@
 package com.autoskola.demo.service.impl;
 
 import com.autoskola.demo.dto.LoginDto;
+import com.autoskola.demo.dto.LoginResponseDto;
 import com.autoskola.demo.dto.RegistrationDto;
 import com.autoskola.demo.exception.*;
 import com.autoskola.demo.model.Candidate;
@@ -21,18 +22,24 @@ public class UserServiceImpl implements UserService {
     private final CandidateRepository candidateRepository;
 
     @Override
-    public String login(LoginDto loginDto, HttpSession session) {
+    public LoginResponseDto login(LoginDto loginDto, HttpSession session) {
+
         User user = userRepository.findByUsername(loginDto.getUsername())
                 .orElseThrow(UserNotFoundException::new);
 
-        if (!loginDto.getPassword().equals(user.getPassword())) {
+        if(!user.getPassword().equals(loginDto.getPassword())) {
             throw new IncorrectPasswordException();
         }
 
         session.setAttribute("user", user);
-        return session.getId();
-    }
 
+        return new LoginResponseDto(
+                user.getId(),
+                user.getUsername(),
+                user.getRole(),
+                "Login successful"
+        );
+    }
     @Override
     public String register(RegistrationDto registrationDto) {
         for (User user : userRepository.findAll()) {

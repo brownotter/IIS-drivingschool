@@ -1,6 +1,7 @@
 package com.autoskola.demo.controller;
 
 import com.autoskola.demo.dto.LoginDto;
+import com.autoskola.demo.dto.LoginResponseDto;
 import com.autoskola.demo.dto.RegistrationDto;
 import com.autoskola.demo.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -22,7 +23,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginDto loginDto, HttpSession session) {
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginDto loginDto, HttpSession session) {
         return ResponseEntity.ok(userService.login(loginDto, session));
     }
 

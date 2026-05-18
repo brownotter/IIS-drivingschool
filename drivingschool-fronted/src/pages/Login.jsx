@@ -9,73 +9,72 @@ function Login() {
 
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
+   const handleLogin = async () => {
 
-        setError("");
+    setError("");
 
-        try {
+    try {
 
-            const response = await fetch(
-                "http://localhost:8080/user/login",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    credentials: "include",
-                    body: JSON.stringify({
-                        username,
-                        password
-                    })
-                }
+        const response = await fetch(
+            "http://localhost:8080/user/login",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    username,
+                    password
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+
+            localStorage.setItem(
+                "user",
+                JSON.stringify(data)
             );
 
-            const data = await response.text();
+            switch (data.role) {
 
-            if (response.ok) {
+                case "ADMIN":
+                    navigate("/admin");
+                    break;
 
-                localStorage.setItem("user", data);
-                
-                navigate("/dashboard");
+                case "CANDIDATE":
+                    navigate("/candidate");
+                    break;
 
-/*
-                switch (role) {
+                case "PROFESSOR":
+                    navigate("/professor");
+                    break;
 
-                    case "ADMIN":
-                        navigate("/dashboard");
-                        break;
+                case "INSTRUCTOR":
+                    navigate("/instructor");
+                    break;
 
-                    case "CANDIDATE":
-                        navigate("/candidate");
-                        break;
+                case "EMPLOYEE":
+                    navigate("/employee");
+                    break;
 
-                    case "PROFESSOR":
-                        navigate("/professor");
-                        break;
-
-                    case "INSTRUCTOR":
-                        navigate("/instructor");
-                        break;
-
-                    case "EMPLOYEE":
-                        navigate("/employee");
-                        break;
-
-                    default:
-                        navigate("/");
-                        
-                }
-                */
-            } else {
-
-                setError("Invalid username or password");
+                default:
+                    navigate("/");
             }
 
-        } catch (err) {
+        } else {
 
-            setError("Server error.");
+            setError(data.message || "Invalid username or password");
         }
-    };
+
+    } catch (err) {
+
+        setError("Server error.");
+    }
+};
 
     return (
 
@@ -121,6 +120,20 @@ function Login() {
                 >
                     Login
                 </button>
+
+                <p style={{ marginTop: "10px" }}>
+    If you don't have an account,
+    <span
+        onClick={() => navigate("/register")}
+        style={{
+            color: "blue",
+            cursor: "pointer",
+            marginLeft: "5px"
+        }}
+    >
+        register here
+    </span>
+</p>
 
                 {error && (
                     <div style={styles.errorBox}>
