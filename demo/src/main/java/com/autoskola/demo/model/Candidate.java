@@ -16,8 +16,13 @@ import java.time.LocalDate;
 @SuperBuilder
 public class Candidate extends User{
 
-    @Column
-    private Category targetCategory;
+   // @Column
+    //private Category targetCategory;
+
+    //odavde ce kasnije citati kategorija
+   @ManyToOne
+   @JoinColumn(name = "package_id")
+   private CategoryPackage categoryPackage;
 
     @Column
     private LocalDate registrationDate;
@@ -39,5 +44,9 @@ public class Candidate extends User{
 
     @Enumerated(EnumType.STRING)
     private CandidateStatus status;
+
+    private Integer theoryScore;
+
+    private Integer drivingScore;
 
 }
