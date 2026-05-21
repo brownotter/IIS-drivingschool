@@ -31,6 +31,7 @@ function Login() {
         );
 
         const data = await response.json();
+        //console.log(data);
 
         if (response.ok) {
 
@@ -42,23 +43,11 @@ function Login() {
             switch (data.role) {
 
                 case "ADMIN":
-                    navigate("/admin");
-                    break;
+                navigate("/admin/profile");
+                break;
 
                 case "CANDIDATE":
                     navigate("/candidate");
-                    break;
-
-                case "PROFESSOR":
-                    navigate("/professor");
-                    break;
-
-                case "INSTRUCTOR":
-                    navigate("/instructor");
-                    break;
-
-                case "EMPLOYEE":
-                    navigate("/employee");
                     break;
 
                 default:

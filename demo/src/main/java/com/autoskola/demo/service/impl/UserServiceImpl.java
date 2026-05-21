@@ -1,18 +1,16 @@
 package com.autoskola.demo.service.impl;
 
-import com.autoskola.demo.dto.LoginDto;
-import com.autoskola.demo.dto.LoginResponseDto;
-import com.autoskola.demo.dto.RegistrationDto;
+import com.autoskola.demo.dto.*;
 import com.autoskola.demo.exception.*;
-import com.autoskola.demo.model.Candidate;
-import com.autoskola.demo.model.Role;
-import com.autoskola.demo.model.User;
+import com.autoskola.demo.model.*;
 import com.autoskola.demo.repository.CandidateRepository;
+import com.autoskola.demo.repository.CategoryPackageRepository;
 import com.autoskola.demo.repository.UserRepository;
 import com.autoskola.demo.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +18,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final CandidateRepository candidateRepository;
+    private final CategoryPackageRepository categoryPackageRepository;
 
     @Override
     public LoginResponseDto login(LoginDto loginDto, HttpSession session) {
@@ -55,6 +54,13 @@ public class UserServiceImpl implements UserService {
         if(!registrationDto.getPassword().equals(registrationDto.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
         }
+        //dodato - kategorija se cita iz paketa kategorije(tu su mi cena itd..)
+        CategoryPackage categoryPackage =
+                categoryPackageRepository
+                        .findByCategory(
+                                registrationDto.getCategory()
+                        )
+                        .orElseThrow();
 
         Candidate candidate = Candidate.builder()
                 .firstName(registrationDto.getFirstName())
@@ -63,11 +69,37 @@ public class UserServiceImpl implements UserService {
                 .email(registrationDto.getEmail())
                 .password(registrationDto.getPassword())
                 .contact(registrationDto.getContact())
-                .targetCategory(registrationDto.getCategory())
+                //.targetCategory(registrationDto.getCategory())
+                .categoryPackage(categoryPackage)
+                .registrationDate(LocalDate.now())
                 .role(Role.CANDIDATE)
+                .theoryClassesCount(0)
+                .theoryAttemptsCount(0)
+                .practiceClassesCount(0)
+                .practiceAttemptsCount(0)
+                .status(CandidateStatus.THEORY)
                 .build();
 
         candidateRepository.save(candidate);
         return "User registered successfully";
     }
+
+    @Override
+    public AdminProfileDto getAdminProfile(HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+
+        if(sessionUser == null) {
+            throw new RuntimeException("User not logged in");
+        }
+
+        return new AdminProfileDto(
+                sessionUser.getFirstName(),
+                sessionUser.getLastName(),
+                sessionUser.getUsername(),
+                sessionUser.getEmail(),
+                sessionUser.getContact()
+        );
+    }
+
 }

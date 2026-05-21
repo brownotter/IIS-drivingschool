@@ -1,11 +1,13 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
-import CandidateDashboard from "./pages/CandidateDashboard";
-import InstructorDashboard from "./pages/InstructorDashboard";
-import ProfessorDashboard from "./pages/ProfessorDashboard";
-import EmployeeDashboard from "./pages/EmployeeDashboard";
+import AdminProfile from "./pages/Admin/AdminDashboard";
+import CandidateDashboard from "./pages/Candidate/CandidateDashboard";
 import Register from "./pages/Register";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Candidates from "./pages/Admin/Candidates";
+import CandidateDetails from "./pages/Admin/CandidateDetails";
+import AddPaymentPage from "./pages/Admin/AddPaymentPage";
+
 
 function App() {
 
@@ -23,34 +25,33 @@ function App() {
                     element={<Login />}
                 />
 
-                <Route
-                    path="/admin"
-                    element={<AdminDashboard />}
-                />
+              <Route
+    path="/admin/profile"
+    element={<AdminProfile />}
+/>
 
                 <Route
-                    path="/candidate"
-                    element={<CandidateDashboard />}
-                />
+    path="/candidate"
+    element={<CandidateDashboard />}
+/>
 
-                <Route
-                    path="/instructor"
-                    element={<InstructorDashboard />}
-                />
+<Route
+    path="/admin/candidates"
+    element={<Candidates />}
+/>
 
-                <Route
-                    path="/professor"
-                    element={<ProfessorDashboard />}
-                />
+<Route
+    path="/admin/candidate/:id"
+    element={<CandidateDetails />}
+/>
 
-                <Route
-                    path="/employee"
-                    element={<EmployeeDashboard />}
-                />
-
-
+<Route
+    path="/admin/candidate/:id/add-payment"
+    element={<AddPaymentPage />}
+/>
 
         </Routes>
+
 
     );
 }

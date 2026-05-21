@@ -1,5 +1,4 @@
 package com.autoskola.demo.controller;
-
 import com.autoskola.demo.dto.LoginDto;
 import com.autoskola.demo.dto.LoginResponseDto;
 import com.autoskola.demo.dto.RegistrationDto;
@@ -9,15 +8,16 @@ import jakarta.validation.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.autoskola.demo.dto.AdminProfileDto;
 
 
 @RestController
 @RequestMapping("user")
 @RequiredArgsConstructor
-@CrossOrigin(
-        origins = "http://localhost:5174/",
+/*@CrossOrigin(
+        origins = "http://localhost:5173/",
         allowCredentials = "true"
-)
+)*/
 public class UserController {
 
     private final UserService userService;
@@ -39,5 +39,15 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegistrationDto registrationDto) {
         return ResponseEntity.ok(userService.register(registrationDto));
+    }
+
+    @GetMapping("/admin/profile")
+    public ResponseEntity<AdminProfileDto> getAdminProfile(
+            HttpSession session
+    ) {
+
+        return ResponseEntity.ok(
+                userService.getAdminProfile(session)
+        );
     }
 }
