@@ -1,14 +1,13 @@
 package com.autoskola.demo.controller;
-import com.autoskola.demo.dto.LoginDto;
-import com.autoskola.demo.dto.LoginResponseDto;
-import com.autoskola.demo.dto.RegistrationDto;
+import com.autoskola.demo.dto.*;
 import com.autoskola.demo.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.autoskola.demo.dto.AdminProfileDto;
+
+import java.util.List;
 
 
 @RestController
@@ -49,5 +48,20 @@ public class UserController {
         return ResponseEntity.ok(
                 userService.getAdminProfile(session)
         );
+    }
+
+    @GetMapping("/professor/profile")
+    public ResponseEntity<ProfessorProfileDto> getProfessorProfile(
+            HttpSession session
+    ) {
+
+        return ResponseEntity.ok(
+                userService.getProfessorProfile(session)
+        );
+    }
+
+    @GetMapping("/professors")
+    public ResponseEntity<List<ProfessorProfileDto>> getAllProfessors() {
+        return ResponseEntity.ok(userService.getAllProfessors());
     }
 }

@@ -16,4 +16,5 @@ public interface TheoryClassService {
     void submitAttendance(Long theoryClassId, List<TheoryAttendanceRecordDto> records);
     void cancelAttendance(Long candidateId, Long theoryClassId);
     void enrollCandidate(Long candidateId, Long theoryClassId);
+    List<DomainDto> getAllDomains();
 }

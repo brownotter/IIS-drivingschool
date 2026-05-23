@@ -114,21 +114,13 @@ public class ProfessorAvailabilityServiceImpl
     }
 
     private void validateNextWeek(LocalDate date) {
-
         LocalDate today = LocalDate.now();
 
-        LocalDate nextMonday =
-                today.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        LocalDate nextMonday = today.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
 
-        LocalDate nextSunday =
-                nextMonday.plusDays(6);
-
-        if (date.isBefore(nextMonday)
-                || date.isAfter(nextSunday)) {
-
-            throw new RuntimeException(
-                    "Availability must be for next week"
-            );
+        LocalDate weekAfterSunday = nextMonday.plusDays(13);
+        if (date.isBefore(nextMonday) || date.isAfter(weekAfterSunday)) {
+            throw new RuntimeException("Availability must be for next week or the week after!");
         }
     }
 }

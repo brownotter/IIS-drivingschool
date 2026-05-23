@@ -15,11 +15,6 @@ import java.time.LocalDate;
 @Data
 @SuperBuilder
 public class Candidate extends User{
-
-   // @Column
-    //private Category targetCategory;
-
-    //odavde ce kasnije citati kategorija
    @ManyToOne
    @JoinColumn(name = "package_id")
    private CategoryPackage categoryPackage;

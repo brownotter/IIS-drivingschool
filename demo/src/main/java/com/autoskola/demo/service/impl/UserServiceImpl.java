@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -100,6 +102,39 @@ public class UserServiceImpl implements UserService {
                 sessionUser.getEmail(),
                 sessionUser.getContact()
         );
+    }
+
+    @Override
+    public ProfessorProfileDto getProfessorProfile(HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+
+        if(sessionUser == null) {
+            throw new RuntimeException("User not logged in");
+        }
+
+        return new ProfessorProfileDto(
+                sessionUser.getId(),
+                sessionUser.getFirstName(),
+                sessionUser.getLastName(),
+                sessionUser.getUsername(),
+                sessionUser.getEmail(),
+                sessionUser.getContact()
+        );
+    }
+
+
+    public List<ProfessorProfileDto> getAllProfessors() {
+        List<User> professors = userRepository.findByRole(Role.PROFESSOR);
+
+        return professors.stream().map(prof -> new ProfessorProfileDto(
+                prof.getId(),
+                prof.getFirstName(),
+                prof.getLastName(),
+                prof.getUsername(),
+                prof.getEmail(),
+                prof.getContact()
+        )).collect(Collectors.toList());
     }
 
 }
