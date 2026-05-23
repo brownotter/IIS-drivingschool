@@ -15,6 +15,13 @@ import DocumentDetailsPage from "./pages/Employee/DocumentDetailsPage";
 import EditDocumentPage from "./pages/Employee/EditDocumentPage";
 import CandidatesPage from "./pages/Employee/CandidatesPage";
 import CandidateDocumentsPage from "./pages/Employee/CandidateDocumentsPage";
+import ProfessorDashboard from "./pages/Professor/ProfessorDashboard";
+import ProfessorSchedule from "./pages/Professor/ProfessorSchedule";
+import ProfessorClassDetails from "./pages/Professor/ProfessorClassDetails";
+import ProfessorMyAvailability from "./pages/Professor/ProfessorMyAvailability";
+import TheorySchedulePage from "./pages/Admin/TheorySchedulePage";
+import CandidateTheorySchedule from "./pages/Candidate/CandidateTheorySchedule";
+import TheoryScheduleView from "./pages/Admin/TheoryScheduleView";
 
 function App() {
 
@@ -32,14 +39,10 @@ function App() {
                 element={<Login />}
             />
 
+            {/* Admin routes */}
             <Route
                 path="/admin/profile"
                 element={<AdminProfile />}
-            />
-
-            <Route
-                path="/candidate"
-                element={<CandidateDashboard />}
             />
 
             <Route
@@ -57,6 +60,49 @@ function App() {
                 element={<AddPaymentPage />}
             />
 
+            <Route
+                path="/admin/theory-schedule"
+                element={<TheorySchedulePage />}
+            />
+
+            <Route
+                path="/admin/theory-schedule-view"
+                element={<TheoryScheduleView />}
+            />
+
+            {/* Candidate routes */}
+            <Route
+                path="/candidate"
+                element={<CandidateDashboard />}
+            />
+
+            <Route
+                path="/candidate/theory-schedule"
+                element={<CandidateTheorySchedule />}
+            />
+
+            {/* Professor routes */}
+            <Route
+                path="/professor/dashboard"
+                element={<ProfessorDashboard />}
+            />
+
+            <Route
+                path="/professor/schedule"
+                element={<ProfessorSchedule />}
+            />
+
+            <Route
+                path="/professor/class-details/:theoryId"
+                element={<ProfessorClassDetails />}
+            />
+
+            <Route
+                path="/professor/availability"
+                element={<ProfessorMyAvailability />}
+            />
+
+            {/* Employee routes */}
             <Route
                 path="/employee"
                 element={<EmployeeHome />}
@@ -82,7 +128,6 @@ function App() {
                 element={<DocumentDetailsPage />}
             />
 
-
             <Route
                 path="/employee/documents/:id/edit"
                 element={<EditDocumentPage />}
@@ -92,6 +137,7 @@ function App() {
                 path="/employee/candidates"
                 element={<CandidatesPage />}
             />
+
             <Route
                 path="/employee/candidates/:candidateId/documents"
                 element={<CandidateDocumentsPage />}

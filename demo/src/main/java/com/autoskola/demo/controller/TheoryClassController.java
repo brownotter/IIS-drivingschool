@@ -63,4 +63,9 @@ public class TheoryClassController {
         theoryClassService.submitAttendance(theoryClassId, records);
         return ResponseEntity.ok("Prisustvo uspešno zabeleženo!");
     }
+
+    @GetMapping("/domains")
+    public ResponseEntity<List<DomainDto>> getAllProfessors() {
+        return ResponseEntity.ok(theoryClassService.getAllDomains());
+    }
 }
