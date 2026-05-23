@@ -7,7 +7,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Candidates from "./pages/Admin/Candidates";
 import CandidateDetails from "./pages/Admin/CandidateDetails";
 import AddPaymentPage from "./pages/Admin/AddPaymentPage";
-
+import ProfessorDashboard from "./pages/Professor/ProfessorDashboard";
+import ProfessorSchedule from "./pages/Professor/ProfessorSchedule";
+import ProfessorClassDetails from "./pages/Professor/ProfessorClassDetails";
+import ProfessorMyAvailability from "./pages/Professor/ProfessorMyAvailability";
+import TheorySchedulePage from "./pages/Admin/TheorySchedulePage";
+import CandidateTheorySchedule from "./pages/Candidate/CandidateTheorySchedule";
+import TheoryScheduleView from "./pages/Admin/TheoryScheduleView";
 
 function App() {
 
@@ -16,39 +22,77 @@ function App() {
         <Routes>
 
                 <Route
-        path="/register"
-        element={<Register />}
-    />
+                    path="/register"
+                    element={<Register />}
+                />
 
-             <Route
+                <Route
                     path="/"
                     element={<Login />}
                 />
 
-              <Route
-    path="/admin/profile"
-    element={<AdminProfile />}
-/>
+                // Admin routes
+                <Route
+                    path="/admin/profile"
+                    element={<AdminProfile />}
+                />
 
                 <Route
-    path="/candidate"
-    element={<CandidateDashboard />}
-/>
+                    path="/admin/candidates"
+                    element={<Candidates />}
+                />
 
-<Route
-    path="/admin/candidates"
-    element={<Candidates />}
-/>
+                <Route
+                    path="/admin/candidate/:id"
+                    element={<CandidateDetails />}
+                />
 
-<Route
-    path="/admin/candidate/:id"
-    element={<CandidateDetails />}
-/>
+                <Route
+                    path="/admin/candidate/:id/add-payment"
+                    element={<AddPaymentPage />}
+                />
 
-<Route
-    path="/admin/candidate/:id/add-payment"
-    element={<AddPaymentPage />}
-/>
+                <Route 
+                path="/admin/theory-schedule" 
+                element={<TheorySchedulePage />} 
+                />
+
+                <Route 
+                path="/admin/theory-schedule-view" 
+                element={<TheoryScheduleView />} 
+                />
+
+                // Candidate routes
+                <Route
+                    path="/candidate"
+                    element={<CandidateDashboard />}
+                />
+
+                <Route
+                    path="/candidate/theory-schedule"
+                    element={<CandidateTheorySchedule />}
+                />
+
+                // Professor routes
+                <Route
+                    path="/professor/dashboard"
+                    element={<ProfessorDashboard />}
+                />
+
+                <Route
+                    path="/professor/schedule"
+                    element={<ProfessorSchedule />}
+                />
+
+                <Route 
+                path="/professor/class-details/:theoryId" 
+                element={<ProfessorClassDetails />} 
+                />
+
+                <Route 
+                path="/professor/availability" 
+                element={<ProfessorMyAvailability />} 
+                />
 
         </Routes>
 

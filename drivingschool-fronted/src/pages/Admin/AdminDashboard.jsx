@@ -48,7 +48,12 @@ function AdminProfile() {
         {
             label: "Candidates",
             onClick: () => navigate("/admin/candidates")
+        },
+        {
+            label: "Theory Schedule",
+            onClick: () => navigate("/admin/theory-schedule")
         }
+
     ]}
     logout={logout}
 />

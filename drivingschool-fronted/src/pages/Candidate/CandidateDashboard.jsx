@@ -87,8 +87,6 @@ function CandidateDashboard() {
         return <h2>Loading...</h2>;
     }
 
-    //const navigate = useNavigate(); ne ovde
-
 const logout = async () => {
 
     //dodala logout logiku
@@ -122,7 +120,8 @@ const logout = async () => {
 
         {
             label: "Schedule",
-            onClick: () => {}
+            onClick: () => 
+                navigate("/candidate/theory-schedule")
         },
 
         {
@@ -147,8 +146,6 @@ const logout = async () => {
     ]}
 />
 
-            {/* MAIN */}
-
             <div style={styles.main}>
 
                 <h1 style={styles.title}>
@@ -156,8 +153,6 @@ const logout = async () => {
                 </h1>
 
                 
-
-                {/* PROFILE CARD */}
 
                 <div style={styles.profileCard}>
 
@@ -253,8 +248,6 @@ const logout = async () => {
 
                 </div>
 
-                {/* STATUS */}
-
                 <div style={styles.statusBox}>
 
                     Current status:
@@ -265,14 +258,12 @@ const logout = async () => {
 
                 </div>
 
-{/* CARDS */}
 
 {
     profile.status !== "COMPLETED" && (
 
         <div style={styles.cardsContainer}>
 
-            {/* PROGRESS */}
 
             <div style={styles.card}>
 
@@ -335,7 +326,6 @@ const logout = async () => {
 
                         </div>
 
-                        {/* RECOMMENDATIONS */}
 
                         <div style={styles.card}>
 

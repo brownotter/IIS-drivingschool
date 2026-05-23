@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.temporal.TemporalAdjusters;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -342,7 +343,7 @@ public class TheoryClassServiceImpl implements TheoryClassService {
 
     @Override
     @Transactional
-    public void submitAttendance(Long theoryClassId, List<TheoryAttendanceRecordDto> records) { // Izmenjeno ime DTO-a
+    public void submitAttendance(Long theoryClassId, List<TheoryAttendanceRecordDto> records) {
         theoryClassRepository.findById(theoryClassId)
                 .orElseThrow(() -> new RuntimeException("Theory class not found"));
 
@@ -457,5 +458,15 @@ public class TheoryClassServiceImpl implements TheoryClassService {
         theoryClass.setCurrentEnrolled(enrolledCount);
 
         theoryClassRepository.save(theoryClass);
+    }
+
+    public List<DomainDto> getAllDomains() {
+        List<Domain> domains = domainRepository.findAll();
+
+        return domains.stream().map(dom -> new DomainDto(
+                dom.getDomainId(),
+                dom.getDomainName(),
+                dom.getDomainOrderNumber()
+        )).collect(Collectors.toList());
     }
 }
