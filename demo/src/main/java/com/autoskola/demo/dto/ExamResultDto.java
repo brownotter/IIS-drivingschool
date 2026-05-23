@@ -1,17 +1,19 @@
 package com.autoskola.demo.dto;
 
 import com.autoskola.demo.model.DocumentStatus;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import java.time.LocalDate;
 
 @Data
 public class ExamResultDto {
-    @NotBlank private String docsTitle;
-    @NotNull  private DocumentStatus docsStatus;
-    @NotNull  private LocalDate issueDate;
-    @NotBlank private String examType;
-    @NotBlank private String examRefNum;
+    private String docsTitle;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate docsExpireDate;
+    private DocumentStatus docsStatus;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate issueDate;
+    private String examType;
+    private String examRefNum;
     private Integer examScore;
 }

@@ -50,6 +50,10 @@ function Login() {
                     navigate("/candidate");
                     break;
 
+                case "EMPLOYEE":
+                    navigate("/employee");
+                    break;
+
                 default:
                     navigate("/");
             }

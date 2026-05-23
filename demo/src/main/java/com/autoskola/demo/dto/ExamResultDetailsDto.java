@@ -17,4 +17,5 @@ public class ExamResultDetailsDto {
     private String examType;
     private String examRefNum;
     private Integer examScore;
+    private String documentType = "EXAMRESULT";
 }

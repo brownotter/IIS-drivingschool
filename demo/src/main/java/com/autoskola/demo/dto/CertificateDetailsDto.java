@@ -16,4 +16,5 @@ public class CertificateDetailsDto {
     private String cerfNumb;
     private LocalDate cerfDate;
     private LocalDate validDate;
+    private String documentType = "CERTIFICATE";
 }

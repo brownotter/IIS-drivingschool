@@ -225,6 +225,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new RuntimeException("Certificate not found with id: " + documentId));
 
         cert.setDocsTitle(dto.getDocsTitle());
+        cert.setDocsExpireDate(dto.getDocsExpireDate());
         cert.setDocsStatus(dto.getDocsStatus());
         cert.setDocsModfDate(LocalDate.now());
         cert.setCurrentVersion(cert.getCurrentVersion() + 1);
@@ -241,6 +242,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new RuntimeException("Contract not found with id: " + documentId));
 
         contract.setDocsTitle(dto.getDocsTitle());
+        contract.setDocsExpireDate(dto.getDocsExpireDate());
         contract.setDocsStatus(dto.getDocsStatus());
         contract.setDocsModfDate(LocalDate.now());
         contract.setCurrentVersion(contract.getCurrentVersion() + 1);
@@ -257,6 +259,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new RuntimeException("Exam result not found with id: " + documentId));
 
         result.setDocsTitle(dto.getDocsTitle());
+        result.setDocsExpireDate(dto.getDocsExpireDate());
         result.setDocsStatus(dto.getDocsStatus());
         result.setDocsModfDate(LocalDate.now());
         result.setCurrentVersion(result.getCurrentVersion() + 1);
