@@ -54,6 +54,10 @@ function Login() {
                     navigate("/professor/dashboard");
                     break;    
 
+                case "EMPLOYEE":
+                    navigate("/employee");
+                    break;
+
                 default:
                     navigate("/");
             }

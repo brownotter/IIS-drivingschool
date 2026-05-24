@@ -1,0 +1,345 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Sidebar from "../../components/Sidebar";
+import { getDocumentDetails } from "../../services/documentService";
+
+function DocumentDetailsPage() {
+    const navigate = useNavigate();
+    const { id } = useParams();
+
+    const [doc, setDoc] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadDocument();
+    }, []);
+
+    const loadDocument = async () => {
+        try {
+            const data = await getDocumentDetails(id);
+            setDoc(data);
+        } catch (err) {
+            navigate("/employee/documents");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const logout = async () => {
+        await fetch("http://localhost:8080/user/logout", {
+            method: "GET",
+            credentials: "include"
+        });
+        localStorage.clear();
+        navigate("/");
+    };
+
+    const formatType = (type) => {
+        switch (type) {
+            case "MEDICALEXAM": return "Medical exam";
+            case "CONTRACT": return "Contract";
+            case "CERTIFICATE": return "Certificate";
+            case "EXAMRESULT": return "Exam result";
+            default: return type;
+        }
+    };
+
+    const formatStatus = (status) => {
+        switch (status) {
+            case "ACTIVE": return { label: "Active", color: "#155724", bg: "#d4edda" };
+            case "EXPIRED": return { label: "Expired", color: "#721c24", bg: "#f8d7da" };
+            case "EXPIRING_SOON": return { label: "Expiring soon", color: "#856404", bg: "#fff3cd" };
+            case "ARCHIVED": return { label: "Archived", color: "#383d41", bg: "#e2e3e5" };
+            default: return { label: status, color: "#333", bg: "#eee" };
+        }
+    };
+
+    const renderSpecificFields = () => {
+        if (!doc) return null;
+        const type = doc.documentType || doc.class;
+
+        if (doc.institution !== undefined) {
+            return (
+                <>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Examination date</label>
+                        <div style={styles.fieldBox}>{doc.medExamDate || "-"}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Institution</label>
+                        <div style={styles.fieldBox}>{doc.institution}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Doctor</label>
+                        <div style={styles.fieldBox}>{doc.doctorName}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Result</label>
+                        <div style={styles.fieldBox}>{doc.medResult}</div>
+                    </div>
+                </>
+            );
+        }
+
+        if (doc.contNumb !== undefined) {
+            return (
+                <>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Contract number</label>
+                        <div style={styles.fieldBox}>{doc.contNumb}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Start date</label>
+                        <div style={styles.fieldBox}>{doc.contStartDate}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Amount</label>
+                        <div style={styles.fieldBox}>{doc.ammountCont}</div>
+                    </div>
+                </>
+            );
+        }
+
+        if (doc.cerfNumb !== undefined) {
+            return (
+                <>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Certificate number</label>
+                        <div style={styles.fieldBox}>{doc.cerfNumb}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Certificate date</label>
+                        <div style={styles.fieldBox}>{doc.cerfDate}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Valid date</label>
+                        <div style={styles.fieldBox}>{doc.validDate}</div>
+                    </div>
+                </>
+            );
+        }
+
+        if (doc.examRefNum !== undefined) {
+            return (
+                <>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Exam type</label>
+                        <div style={styles.fieldBox}>{doc.examType}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Reference number</label>
+                        <div style={styles.fieldBox}>{doc.examRefNum}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Score</label>
+                        <div style={styles.fieldBox}>{doc.examScore}</div>
+                    </div>
+                    <div style={styles.fieldGroup}>
+                        <label style={styles.label}>Issue date</label>
+                        <div style={styles.fieldBox}>{doc.issueDate}</div>
+                    </div>
+                </>
+            );
+        }
+
+        return null;
+    };
+
+    if (loading) return <h2>Loading...</h2>;
+    if (!doc) return <h2>Document not found.</h2>;
+
+    const s = formatStatus(doc.docsStatus);
+
+    return (
+        <div style={styles.container}>
+
+            <Sidebar
+                logout={logout}
+                buttons={[
+                    { label: "Home",       onClick: () => navigate("/employee") },
+                    { label: "Documents",  onClick: () => navigate("/employee/documents") },
+                    { label: "Candidates", onClick: () => navigate("/employee/candidates") },
+                    { label: "Alerts",     onClick: () => navigate("/employee/alerts") },
+                    { label: "Archive",    onClick: () => navigate("/employee/archive") },
+                    { label: "My Profile", onClick: () => navigate("/employee/profile") },
+                ]}
+            />
+
+            <div style={styles.main}>
+
+                <div style={styles.header}>
+                    <button style={styles.backBtn} onClick={() => navigate("/employee/documents")}>
+                        Back
+                    </button>
+                    <p style={styles.subtitle}>Document details</p>
+                </div>
+
+                <h1 style={styles.docTitle}>{doc.docsTitle}</h1>
+
+                <div style={styles.card}>
+
+                    <div style={styles.leftSection}>
+
+                        <div style={styles.row}>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Document type</label>
+                                <div style={styles.fieldBox}>{formatType(doc.documentType)}</div>
+                            </div>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Document status</label>
+                                <div style={{
+                                    ...styles.fieldBox,
+                                    backgroundColor: s.bg,
+                                    color: s.color,
+                                    fontWeight: "bold"
+                                }}>
+                                    {s.label}
+                                </div>
+                            </div>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Document version</label>
+                                <div style={styles.fieldBox}>V{doc.currentVersion}</div>
+                            </div>
+                        </div>
+
+                        <div style={styles.row}>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Created date</label>
+                                <div style={styles.fieldBox}>{doc.docsCreateDate}</div>
+                            </div>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Expiry date</label>
+                                <div style={styles.fieldBox}>{doc.docsExpireDate || "-"}</div>
+                            </div>
+                            <div style={styles.fieldGroup}>
+                                <label style={styles.label}>Last modified</label>
+                                <div style={styles.fieldBox}>{doc.docsModfDate || "-"}</div>
+                            </div>
+                        </div>
+
+                        <div style={styles.specificBox}>
+                            <div style={styles.row}>
+                                {renderSpecificFields()}
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div style={styles.actions}>
+                        <button style={styles.actionBtn}>Download</button>
+                        <button style={styles.actionBtn}>Archive</button>
+                        <button
+                            style={styles.actionBtn}
+                            onClick={() => navigate(`/employee/documents/${id}/edit`)}
+                        >
+                            Edit
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    );
+}
+
+const styles = {
+    container: {
+        display: "flex",
+        minHeight: "100vh",
+        backgroundColor: "#f4f7fb",
+        fontFamily: "Arial"
+    },
+    main: {
+        flex: 1,
+        padding: "40px"
+    },
+    header: {
+        display: "flex",
+        alignItems: "center",
+        gap: "20px",
+        marginBottom: "8px"
+    },
+    backBtn: {
+        padding: "8px 16px",
+        border: "none",
+        borderRadius: "8px",
+        backgroundColor: "#1e3c72",
+        color: "white",
+        cursor: "pointer",
+        fontSize: "14px"
+    },
+    subtitle: {
+        color: "#888",
+        fontSize: "14px",
+        fontStyle: "italic"
+    },
+    docTitle: {
+        color: "#1e3c72",
+        fontSize: "26px",
+        marginBottom: "24px",
+        textAlign: "center"
+    },
+    card: {
+        backgroundColor: "white",
+        padding: "30px",
+        borderRadius: "12px",
+        boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+        display: "flex",
+        gap: "40px",
+        justifyContent: "space-between"
+    },
+    leftSection: {
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        gap: "24px"
+    },
+    row: {
+        display: "flex",
+        gap: "20px",
+        flexWrap: "wrap"
+    },
+    fieldGroup: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "6px",
+        minWidth: "160px"
+    },
+    label: {
+        fontSize: "12px",
+        color: "#888"
+    },
+    fieldBox: {
+        padding: "10px 14px",
+        borderRadius: "8px",
+        border: "1px solid #ddd",
+        fontSize: "14px",
+        backgroundColor: "#f9f9f9",
+        color: "#333"
+    },
+    specificBox: {
+        borderTop: "1px solid #eee",
+        paddingTop: "20px"
+    },
+    actions: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        minWidth: "120px"
+    },
+    actionBtn: {
+        padding: "12px 20px",
+        backgroundColor: "white",
+        color: "#1e3c72",
+        border: "1px solid #1e3c72",
+        borderRadius: "8px",
+        fontSize: "14px",
+        cursor: "pointer",
+        fontWeight: "bold",
+        textAlign: "center"
+    }
+};
+
+export default DocumentDetailsPage;
