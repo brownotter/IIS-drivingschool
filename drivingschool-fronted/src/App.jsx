@@ -30,16 +30,15 @@ function App() {
         <Routes>
 
             <Route
+                path="/"
+                element={<Login />}
+            />
+            
+            <Route
                 path="/register"
                 element={<Register />}
             />
 
-            <Route
-                path="/"
-                element={<Login />}
-            />
-
-            {/* Admin routes */}
             <Route
                 path="/admin/profile"
                 element={<AdminProfile />}
@@ -70,7 +69,6 @@ function App() {
                 element={<TheoryScheduleView />}
             />
 
-            {/* Candidate routes */}
             <Route
                 path="/candidate"
                 element={<CandidateDashboard />}
@@ -81,7 +79,6 @@ function App() {
                 element={<CandidateTheorySchedule />}
             />
 
-            {/* Professor routes */}
             <Route
                 path="/professor/dashboard"
                 element={<ProfessorDashboard />}
@@ -102,7 +99,6 @@ function App() {
                 element={<ProfessorMyAvailability />}
             />
 
-            {/* Employee routes */}
             <Route
                 path="/employee"
                 element={<EmployeeHome />}

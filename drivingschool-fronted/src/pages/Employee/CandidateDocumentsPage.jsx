@@ -75,11 +75,12 @@ function CandidateDocumentsPage() {
                 ]}
             />
 
+
             <div style={styles.main}>
 
                 <div style={styles.header}>
                     <button style={styles.backBtn} onClick={() => navigate("/employee/candidates")}>
-                        ← Back
+                        Back
                     </button>
                     <h1 style={styles.title}>
                         {candidate ? `${candidate.firstName} ${candidate.lastName} — Documents` : "Documents"}
