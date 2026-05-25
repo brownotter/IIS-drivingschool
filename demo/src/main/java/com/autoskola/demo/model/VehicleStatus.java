@@ -4,5 +4,5 @@ public enum VehicleStatus {
     RUNNING,
     TECHNICAL_INSPECTION,
     MALFUNCTION,
-    INACTIVE
+    ARCHIVED
 }

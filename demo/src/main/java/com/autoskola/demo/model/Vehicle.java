@@ -7,27 +7,30 @@ import lombok.*;
 @Table(name = "vehicles")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Vehicle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private String brand;
 
-    @Column
+    @Column(nullable = false)
     private String model;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, name = "registration_plate")
     private String registrationPlate;
 
-    @Column
+    @Column(name = "manufacture_year")
     private int manufactureYear;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private VehicleStatus status;
 
-    @Column
+    @Enumerated(EnumType.STRING)
     private Category category;
 }

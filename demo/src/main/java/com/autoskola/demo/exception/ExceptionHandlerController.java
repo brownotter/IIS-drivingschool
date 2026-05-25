@@ -28,6 +28,11 @@ public class ExceptionHandlerController {
         return preparedResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return preparedResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     private ResponseEntity<ExceptionResponse> preparedResponse(HttpStatus httpStatus, String message) {
         ExceptionResponse response = new ExceptionResponse(httpStatus, LocalDateTime.now(), message);
         log.info("Exception: {}", response);

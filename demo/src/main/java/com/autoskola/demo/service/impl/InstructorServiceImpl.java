@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InstructorServiceImpl implements InstructorService {
 
-    public final InstructorRepository instructorRepository;
+    private final InstructorRepository instructorRepository;
 
 
     @Override
