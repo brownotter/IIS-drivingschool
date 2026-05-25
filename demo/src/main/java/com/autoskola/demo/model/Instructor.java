@@ -2,6 +2,7 @@ package com.autoskola.demo.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Table(name = "instructors")
 @Entity
@@ -9,15 +10,16 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 public class Instructor extends User{
 
-    @Column
+    @Enumerated(EnumType.STRING)
     private Category teachingCategory;
 
-    @Column
+    @Column(unique = true, nullable = false)
     private String licenceNumber;
 
-    @Column
+    @Enumerated(EnumType.STRING)
     private InstructorStatus status;
 
     @Column
