@@ -22,6 +22,10 @@ import ProfessorMyAvailability from "./pages/Professor/ProfessorMyAvailability";
 import TheorySchedulePage from "./pages/Admin/TheorySchedulePage";
 import CandidateTheorySchedule from "./pages/Candidate/CandidateTheorySchedule";
 import TheoryScheduleView from "./pages/Admin/TheoryScheduleView";
+import Vehicles from "./pages/Admin/Vehicles";
+import Instructors from "./pages/Admin/Instructors";
+import InstructorProfile from "./pages/Instructor/InstructorDashboard";
+import InstructorVehicles from "./pages/Instructor/InstructorVehicles";
 
 function App() {
 
@@ -138,6 +142,25 @@ function App() {
                 path="/employee/candidates/:candidateId/documents"
                 element={<CandidateDocumentsPage />}
             />
+
+                <Route 
+                    path="/admin/vehicles" 
+                    element={<Vehicles />} />
+
+                <Route 
+                    path="/admin/instructors" 
+                    element={<Instructors />} />
+
+                // Instructor routes
+                <Route
+                    path="/instructor/profile"
+                    element={<InstructorProfile />}
+                />
+
+                <Route
+                    path="/instructor/vehicles"
+                    element={<InstructorVehicles />}
+                />
 
         </Routes>
 

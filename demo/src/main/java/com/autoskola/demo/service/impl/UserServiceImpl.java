@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getUsername(),
                 user.getRole(),
-                "Login successful"
+                "Login successful!"
         );
     }
     @Override

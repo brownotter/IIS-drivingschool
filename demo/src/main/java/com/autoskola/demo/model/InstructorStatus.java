@@ -1,6 +1,8 @@
 package com.autoskola.demo.model;
 
 public enum InstructorStatus {
+    WORKING,
     VACATION,
-    SICKNESS
+    SICKNESS,
+    ARCHIVED
 }
