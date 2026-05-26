@@ -56,6 +56,9 @@ function Login() {
 
                 case "INSTRUCTOR":
                     navigate("/instructor/profile");
+                    
+                case "EMPLOYEE":
+                    navigate("/employee");
                     break;
 
                 default:

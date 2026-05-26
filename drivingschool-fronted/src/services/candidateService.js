@@ -80,3 +80,20 @@ async (id, formData) => {
 
     return await response.text();
 };
+
+export const getAllCandidates = async () => {
+
+    const response = await fetch(
+        `${API}/all`,
+        {
+            method: "GET",
+            credentials: "include"
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to fetch candidates");
+    }
+
+    return response.json();
+};
