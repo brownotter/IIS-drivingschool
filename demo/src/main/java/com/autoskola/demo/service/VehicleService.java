@@ -10,8 +10,7 @@ import java.util.List;
 @Service
 public interface VehicleService {
 
-    List<VehicleProfileDto> getAllVehicles();
-    List<VehicleProfileDto> getAllActiveVehicles();
+    List<VehicleProfileDto> getAllVehicles(boolean activeOnly);
     VehicleProfileDto createVehicle(VehicleCreateDto dto);
     VehicleProfileDto updateVehicle(Long id, VehicleUpdateDto dto);
     VehicleProfileDto updateVehicleStatus(Long id, String status);

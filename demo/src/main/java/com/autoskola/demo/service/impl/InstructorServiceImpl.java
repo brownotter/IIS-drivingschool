@@ -3,13 +3,13 @@ package com.autoskola.demo.service.impl;
 import com.autoskola.demo.dto.InstructorCreateDto;
 import com.autoskola.demo.dto.InstructorProfileDto;
 import com.autoskola.demo.dto.InstructorUpdateDto;
+import com.autoskola.demo.exception.ResourceAlreadyExistsException;
 import com.autoskola.demo.exception.UserNotFoundException;
-import com.autoskola.demo.model.Category;
-import com.autoskola.demo.model.Instructor;
-import com.autoskola.demo.model.InstructorStatus;
-import com.autoskola.demo.model.Role;
+import com.autoskola.demo.exception.UsernameAlreadyExistsException;
+import com.autoskola.demo.model.*;
 import com.autoskola.demo.repository.InstructorRepository;
 import com.autoskola.demo.service.InstructorService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +23,27 @@ public class InstructorServiceImpl implements InstructorService {
 
     private final InstructorRepository instructorRepository;
 
+
+    @Override
+    public InstructorProfileDto getInstructorProfile(HttpSession session) {
+
+        User user = (User) session.getAttribute("user");
+
+        Instructor instructor = instructorRepository.findById(user.getId())
+                .orElseThrow(UserNotFoundException::new);
+
+        return InstructorProfileDto.builder()
+                .id(instructor.getId())
+                .firstName(instructor.getFirstName())
+                .lastName(instructor.getLastName())
+                .email(instructor.getEmail())
+                .contact(instructor.getContact())
+                .teachingCategory(instructor.getTeachingCategory().name())
+                .licenceNumber(instructor.getLicenceNumber())
+                .status(instructor.getStatus().name())
+                .averageRate((instructor.getAverageRate()))
+                .build();
+    }
 
     @Override
     public List<InstructorProfileDto> getAllInstructors() {
@@ -71,6 +92,19 @@ public class InstructorServiceImpl implements InstructorService {
     @Override
     public InstructorProfileDto createInstructor(InstructorCreateDto dto) {
 
+        if (instructorRepository.existsByUsername(dto.getUsername())) {
+            throw new UsernameAlreadyExistsException(dto.getUsername());
+        }
+        if (instructorRepository.existsByEmail(dto.getEmail())) {
+            throw new ResourceAlreadyExistsException("Email already exists!");
+        }
+        if (instructorRepository.existsByLicenceNumber(dto.getLicenceNumber())) {
+            throw new ResourceAlreadyExistsException("Licence number already exists!");
+        }
+        if (instructorRepository.existsByContact(dto.getContact())) {
+            throw new ResourceAlreadyExistsException("Contact already exists!");
+        }
+
         Instructor newInstructor = Instructor.builder()
                 .username(dto.getUsername())
                 .firstName(dto.getFirstName())
@@ -110,6 +144,16 @@ public class InstructorServiceImpl implements InstructorService {
 
         Instructor instructor = instructorRepository.findById(id)
                 .orElseThrow(UserNotFoundException::new);
+
+        if(instructorRepository.existsByEmailAndIdNot(dto.getEmail(), id)) {
+            throw new ResourceAlreadyExistsException("Email already exists!");
+        }
+        if(instructorRepository.existsByLicenceNumberAndIdNot(dto.getLicenceNumber(), id)) {
+            throw new ResourceAlreadyExistsException("Licence number already exists!");
+        }
+        if(instructorRepository.existsByContactAndIdNot(dto.getContact(), id)) {
+            throw new ResourceAlreadyExistsException("Contact already exists!");
+        }
 
         instructor.setFirstName(dto.getFirstName());
         instructor.setLastName(dto.getLastName());
@@ -156,25 +200,4 @@ public class InstructorServiceImpl implements InstructorService {
                 .averageRate((instructor.getAverageRate()))
                 .build();
     }
-
-    @Override
-    public List<InstructorProfileDto> getAllActiveInstructors() {
-
-        List<Instructor> activeInstructors = instructorRepository.findAllActiveInstructors();
-
-        return activeInstructors.stream()
-                .map(instructor -> InstructorProfileDto.builder()
-                        .id(instructor.getId())
-                        .firstName(instructor.getFirstName())
-                        .lastName(instructor.getLastName())
-                        .email(instructor.getEmail())
-                        .contact(instructor.getContact())
-                        .teachingCategory(instructor.getTeachingCategory().name())
-                        .licenceNumber(instructor.getLicenceNumber())
-                        .status(instructor.getStatus().name())
-                        .averageRate(instructor.getAverageRate())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
 }

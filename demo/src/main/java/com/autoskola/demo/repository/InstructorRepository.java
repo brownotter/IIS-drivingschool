@@ -8,6 +8,13 @@ import java.util.List;
 
 public interface InstructorRepository extends JpaRepository<Instructor, Long> {
 
-    @Query("SELECT i FROM Instructor i WHERE i.status != com.autoskola.demo.model.InstructorStatus.ARCHIVED")
-    List<Instructor> findAllActiveInstructors();
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
+    boolean existsByLicenceNumber(String licenceNumber);
+    boolean existsByContact(String contact);
+
+    boolean existsByUsernameAndIdNot(String username, Long id);
+    boolean existsByEmailAndIdNot(String email, Long id);
+    boolean existsByLicenceNumberAndIdNot(String licenceNumber, Long id);
+    boolean existsByContactAndIdNot(String contact, Long id);
 }

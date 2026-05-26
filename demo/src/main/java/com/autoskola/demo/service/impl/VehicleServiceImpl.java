@@ -3,6 +3,8 @@ package com.autoskola.demo.service.impl;
 import com.autoskola.demo.dto.VehicleCreateDto;
 import com.autoskola.demo.dto.VehicleProfileDto;
 import com.autoskola.demo.dto.VehicleUpdateDto;
+import com.autoskola.demo.exception.InvalidDataException;
+import com.autoskola.demo.exception.ResourceAlreadyExistsException;
 import com.autoskola.demo.exception.ResourceNotFoundException;
 import com.autoskola.demo.model.Category;
 import com.autoskola.demo.model.Vehicle;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Year;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,10 +25,19 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final VehicleRepository vehicleRepository;
 
-    @Override
-    public List<VehicleProfileDto> getAllVehicles() {
+    private void validateVehicleYear(int manufactureYear) {
+        int currentYear = Year.now().getValue();
+        int minYear = currentYear - 10;
 
-        List<Vehicle> vehicles = vehicleRepository.findAll();
+        if(manufactureYear < minYear || manufactureYear > currentYear) {
+            throw new InvalidDataException("Invalid manufacture year!");
+        }
+    }
+
+    @Override
+    public List<VehicleProfileDto> getAllVehicles(boolean activeOnly) {
+
+        List<Vehicle> vehicles = activeOnly ? vehicleRepository.findAllActiveVehicles() : vehicleRepository.findAll();
 
         return vehicles.stream()
                 .map(vehicle -> VehicleProfileDto.builder()
@@ -41,25 +53,13 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
-    public List<VehicleProfileDto> getAllActiveVehicles() {
-
-        List<Vehicle> activeVehicles = vehicleRepository.findAllActiveVehicles();
-
-        return activeVehicles.stream()
-                .map(vehicle -> VehicleProfileDto.builder()
-                        .id(vehicle.getId())
-                        .brand(vehicle.getBrand())
-                        .model(vehicle.getModel())
-                        .registrationPlate(vehicle.getRegistrationPlate())
-                        .manufactureYear(vehicle.getManufactureYear())
-                        .status(vehicle.getStatus().name())
-                        .category(vehicle.getCategory().name())
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public VehicleProfileDto createVehicle(VehicleCreateDto dto) {
+
+        if(vehicleRepository.existsVehicleByRegistrationPlate(dto.getRegistrationPlate())) {
+            throw new ResourceAlreadyExistsException("Registration plate already exists!");
+        }
+
+        validateVehicleYear(dto.getManufactureYear());
 
         Vehicle newVehicle = Vehicle.builder()
                 .brand(dto.getBrand())
@@ -89,6 +89,12 @@ public class VehicleServiceImpl implements VehicleService {
 
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found!"));
+
+        if(vehicleRepository.existsVehicleByRegistrationPlateAndIdNot(dto.getRegistrationPlate(), id)) {
+            throw new ResourceAlreadyExistsException("Registration plate already exists!");
+        }
+
+        validateVehicleYear(dto.getManufactureYear());
 
         vehicle.setBrand(dto.getBrand());
         vehicle.setModel(dto.getModel());

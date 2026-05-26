@@ -2,70 +2,61 @@ import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import { useNavigate } from "react-router-dom";
 
-function AdminProfile() {
-
-    const [admin, setAdmin] = useState(null);
+function InstructorProfile() {
+    const [instructor, setInstructor] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
 
         fetch(
-            "http://localhost:8080/user/admin/profile",
+            "http://localhost:8080/instructor/profile",
             {
                 method: "GET",
                 credentials: "include"
             }
         )
             .then((response) => response.json())
-            .then((data) => setAdmin(data))
+            .then((data) => setInstructor(data))
             .catch((error) => console.log(error));
-
     }, []);
 
     const logout = () => {
-
         localStorage.removeItem("user");
-
         window.location.href = "/";
     };
 
-    if(!admin) {
+    if (!instructor) {
         return <h2>Loading...</h2>;
     }
 
     return (
-
         <div style={styles.container}>
-
-            
 
             <Sidebar
                 buttons={[
                     {
                         label: "My Profile",
-                        onClick: () => navigate("/admin/profile")
+                        onClick: () => navigate("/instructor/profile")
+                    },
+                    {
+                        label: "Schedule",
+                        onClick: () => navigate("/instructor/schedule")
                     },
                     {
                         label: "Candidates",
-                        onClick: () => navigate("/admin/candidates")
+                        onClick: () => navigate("/instructor/candidates")
                     },
                     {
-                        label: "Theory Schedule",
-                        onClick: () => navigate("/admin/theory-schedule")
+                        label: "Vehicles",
+                        onClick: () => navigate("/instructor/vehicles")
                     },
                     {
-                        label: "Instructors",
-                        onClick: () => navigate("/admin/instructors")
-                    },
-                    { 
-                        label: "Vehicles", 
-                        onClick: () => navigate("/admin/vehicles") 
+                        label: "Notifications",
+                        onClick: () => navigate("/instructor/notifications")
                     }
-
                 ]}
                 logout={logout}
             />
-            
 
             <div style={styles.content}>
 
@@ -74,23 +65,19 @@ function AdminProfile() {
                 <div style={styles.card}>
 
                     <p>
-                        <strong>First name:</strong> {admin.firstName}
+                        <strong>First name:</strong> {instructor.firstName}
                     </p>
 
                     <p>
-                        <strong>Last name:</strong> {admin.lastName}
+                        <strong>Last name:</strong> {instructor.lastName}
                     </p>
 
                     <p>
-                        <strong>Username:</strong> {admin.username}
+                        <strong>Email:</strong> {instructor.email}
                     </p>
 
                     <p>
-                        <strong>Email:</strong> {admin.email}
-                    </p>
-
-                    <p>
-                        <strong>Contact:</strong> {admin.contact}
+                        <strong>Contact:</strong> {instructor.contact}
                     </p>
 
                 </div>
@@ -102,7 +89,6 @@ function AdminProfile() {
 }
 
 const styles = {
-
     container: {
         display: "flex",
         minHeight: "100vh"
@@ -123,4 +109,4 @@ const styles = {
     }
 };
 
-export default AdminProfile;
+export default InstructorProfile;

@@ -43,8 +43,8 @@ function Login() {
             switch (data.role) {
 
                 case "ADMIN":
-                navigate("/admin/profile");
-                break;
+                    navigate("/admin/profile");
+                    break;
 
                 case "CANDIDATE":
                     navigate("/candidate");
@@ -53,6 +53,10 @@ function Login() {
                 case "PROFESSOR":
                     navigate("/professor/dashboard");
                     break;    
+
+                case "INSTRUCTOR":
+                    navigate("/instructor/profile");
+                    break;
 
                 default:
                     navigate("/");

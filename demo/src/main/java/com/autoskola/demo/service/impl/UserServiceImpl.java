@@ -25,10 +25,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public LoginResponseDto login(LoginDto loginDto, HttpSession session) {
 
-        if(session.getAttribute("user") != null) {
-            throw new AlreadyLoggedInException();
-        }
-
         User user = userRepository.findByUsername(loginDto.getUsername())
                 .orElseThrow(UserNotFoundException::new);
 

@@ -44,16 +44,14 @@
             }
         }
 
-        @GetMapping("/historical")
-        public ResponseEntity<List<VehicleProfileDto>> getAllVehicles(HttpSession session) {
-            checkAdminAccess(session);
-            return ResponseEntity.ok(vehicleService.getAllVehicles());
-        }
-
         @GetMapping("/all")
-        public ResponseEntity<List<VehicleProfileDto>> getAllActiveVehicles(HttpSession session) {
+        public ResponseEntity<List<VehicleProfileDto>> getAllVehicles(HttpSession session) {
             checkAdminOrInstructorAccess(session);
-            return ResponseEntity.ok(vehicleService.getAllActiveVehicles());
+
+            User user = (User) session.getAttribute("user");
+            boolean activeOnly = !user.getRole().name().equals("ADMIN");
+
+            return ResponseEntity.ok(vehicleService.getAllVehicles(activeOnly));
         }
 
         @PostMapping

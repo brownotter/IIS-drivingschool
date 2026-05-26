@@ -23,14 +23,19 @@ public class ExceptionHandlerController {
         return preparedResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler(AlreadyLoggedInException.class)
-    public ResponseEntity<ExceptionResponse> handleUserAlreadyLoggedInException(AlreadyLoggedInException ex) {
-        return preparedResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
-
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ExceptionResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
         return preparedResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ExceptionResponse> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
+        return preparedResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidDataException.class)
+    public ResponseEntity<ExceptionResponse> handleInvalidDataException(InvalidDataException ex) {
+        return preparedResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     private ResponseEntity<ExceptionResponse> preparedResponse(HttpStatus httpStatus, String message) {

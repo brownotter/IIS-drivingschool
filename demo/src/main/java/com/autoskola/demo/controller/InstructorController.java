@@ -4,13 +4,11 @@ import com.autoskola.demo.dto.InstructorCreateDto;
 import com.autoskola.demo.dto.InstructorProfileDto;
 import com.autoskola.demo.dto.InstructorUpdateDto;
 import com.autoskola.demo.exception.AccessDeniedException;
-import com.autoskola.demo.model.Role;
 import com.autoskola.demo.model.User;
 import com.autoskola.demo.service.InstructorService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,16 +31,25 @@ public class InstructorController {
         }
     }
 
-    @GetMapping("/historical")
-    public ResponseEntity<List<InstructorProfileDto>> getAllInstructors(HttpSession session) {
-        checkAdminAccess(session);
-        return ResponseEntity.ok(instructorService.getAllInstructors());
+    private void checkInstructorAccess(HttpSession session) {
+
+        User loggedUser = (User) session.getAttribute("user");
+
+        if(loggedUser == null || !loggedUser.getRole().name().equals("INSTRUCTOR")) {
+            throw new AccessDeniedException();
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<InstructorProfileDto> getInstructorProfile(HttpSession session) {
+        checkInstructorAccess(session);
+        return ResponseEntity.ok(instructorService.getInstructorProfile(session));
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<InstructorProfileDto>> getAllActiveInstructors(HttpSession session) {
+    public ResponseEntity<List<InstructorProfileDto>> getAllInstructors(HttpSession session) {
         checkAdminAccess(session);
-        return ResponseEntity.ok(instructorService.getAllActiveInstructors());
+        return ResponseEntity.ok(instructorService.getAllInstructors());
     }
 
     @PatchMapping("/{id}/status")
