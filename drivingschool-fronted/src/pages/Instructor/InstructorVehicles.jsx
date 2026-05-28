@@ -5,11 +5,9 @@ import { useNavigate } from "react-router-dom";
 function InstructorVehicles() {
     const [vehicles, setVehicles] = useState([]);
     
-    // Stanje za vozilo koje se trenutno pregleda
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [errorMessage, setErrorMessage] = useState("");
     
-    // Stanja za filtriranje
     const [categoryFilter, setCategoryFilter] = useState("ALL");
     const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -31,13 +29,11 @@ function InstructorVehicles() {
         fetchVehiclesFromBackend();
     }, []);
 
-    // Instruktor menja samo status u lokalnom stanju unutar modala
     const handleStatusChange = (newStatus) => {
         if (!selectedVehicle) return;
         setSelectedVehicle({ ...selectedVehicle, status: newStatus });
     };
 
-    // Prilikom čuvanja, proveravamo da li je status promenjen i šaljemo PATCH
     const handleUpdateStatus = (e) => {
         e.preventDefault();
         setErrorMessage(""); 
@@ -53,7 +49,6 @@ function InstructorVehicles() {
                     if (response.ok) {
                         finalizeUpdate();
                     } else {
-                        // Ako backend padne ili vrati grešku koja nije JSON, hvata se kroz .catch() unutar ovog bloka
                         const errorData = await response.json().catch(() => ({ message: "Failed to update status." }));
                         setErrorMessage(errorData.message || `Error: ${response.status}`);
                     }
@@ -62,7 +57,7 @@ function InstructorVehicles() {
                     setErrorMessage("Network error. Please try again later.");
                 });
         } else {
-            finalizeUpdate(); // Ako ništa nije promenjeno, samo zatvori modal
+            finalizeUpdate();
         }
     };
 
@@ -97,7 +92,6 @@ function InstructorVehicles() {
                 
                 <p style={styles.subtitle}>Click on a vehicle to view details or update its status</p>
 
-                {/* Filteri */}
                 <div style={{ display: "flex", gap: "20px", marginBottom: "25px", alignItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                         <label style={{ fontSize: "14px", fontWeight: "bold", color: "#555" }}>Filter by Category:</label>
@@ -131,7 +125,6 @@ function InstructorVehicles() {
                     </div>
                 </div>
 
-                {/* MODAL ZA PREGLED I IZMENU STATUSA */}
                 {selectedVehicle && (
                     <div style={styles.modalOverlay} onClick={() => finalizeUpdate()}>
                         <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -161,13 +154,12 @@ function InstructorVehicles() {
                                 <label style={styles.label}>Manufacture Year:</label>
                                 <div style={styles.readOnlyField}>{selectedVehicle.manufactureYear}</div>
 
-                                {/* Status je jedino polje koje instruktor zapravo može da menja */}
                                 <label style={styles.label}>Change Status:</label>
                                 <select 
                                     style={styles.input} 
                                     value={selectedVehicle.status} 
                                     onChange={(e) => handleStatusChange(e.target.value)}
-                                    disabled={selectedVehicle.status === "ARCHIVED"} // Ne može da menja ako je već arhivirano
+                                    disabled={selectedVehicle.status === "ARCHIVED"}
                                 >
                                     <option value="RUNNING">Running</option>
                                     <option value="TECHNICAL_INSPECTION">Technical Inspection</option>
@@ -184,7 +176,6 @@ function InstructorVehicles() {
                     </div>
                 )}
 
-                {/* Grid sa karticama automobila */}
                 <div style={styles.gridContainer}>
                     {vehicles
                         .filter((v) => {
