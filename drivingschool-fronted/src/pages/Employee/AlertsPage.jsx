@@ -34,6 +34,30 @@ function AlertsPage() {
         }
     };
 
+    const markAsRead = async (documentId) => {
+        try {
+            await fetch(`${BASE_URL}/${documentId}/validity/read`, {
+                method: "PUT",
+                credentials: "include"
+            });
+            loadAlerts();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const markAsUnread = async (documentId) => {
+        try {
+            await fetch(`${BASE_URL}/${documentId}/validity/unread`, {
+                method: "PUT",
+                credentials: "include"
+            });
+            loadAlerts();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
             method: "GET",
@@ -53,51 +77,153 @@ function AlertsPage() {
         }
     };
 
-    const renderTable = (docs, color) => (
-        <div style={styles.tableWrapper}>
-            <table style={styles.table}>
-                <thead>
-                    <tr style={{ ...styles.tableHeader, backgroundColor: color }}>
-                        <th style={styles.th}>Document name</th>
-                        <th style={styles.th}>Type</th>
-                        <th style={styles.th}>Created</th>
-                        <th style={styles.th}>Expiry date</th>
-                        <th style={styles.th}></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {docs.length === 0 ? (
-                        <tr>
-                            <td colSpan="5" style={styles.emptyMsg}>No documents.</td>
-                        </tr>
-                    ) : (
-                        docs.map((doc, index) => (
-                            <tr
-                                key={doc.documentsId}
-                                style={{
-                                    ...styles.tableRow,
-                                    backgroundColor: index % 2 === 0 ? "white" : "#f9f9f9"
-                                }}
-                            >
-                                <td style={styles.td}>{doc.docsTitle}</td>
-                                <td style={styles.td}>{formatType(doc.documentType)}</td>
-                                <td style={styles.td}>{doc.docsCreateDate}</td>
-                                <td style={styles.td}>{doc.docsExpireDate || "-"}</td>
-                                <td style={styles.td}>
-                                    <button
-                                        style={styles.openBtn}
-                                        onClick={() => navigate(`/employee/documents/${doc.documentsId}`)}
-                                    >
-                                        Open
-                                    </button>
-                                </td>
-                            </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
-        </div>
-    );
+    const renderSection = (title, docs, headerColor, dotColor) => {
+        const unread = docs.filter(d => !d.isRead);
+        const read = docs.filter(d => d.isRead);
+        
+
+        return (
+            <div style={styles.section}>
+                <div style={styles.sectionHeader}>
+                    <span style={{ ...styles.dot, backgroundColor: dotColor }}></span>
+                    <h2 style={styles.sectionTitle}>
+                        {title} ({docs.length})
+                        {unread.length > 0 && title !== "Expired" && (
+                            <span style={styles.unreadBadge}>{unread.length} new</span>
+                        )}
+                    </h2>
+                </div>
+
+                {unread.length > 0 && (
+                    <>
+                        {title !== "Expired" && (
+                        <p style={styles.subLabel}>Unread</p>
+                        )}
+                            <div style={styles.tableWrapper}>
+                            <table style={styles.table}>
+                                <thead>
+                                    <tr style={{ ...styles.tableHeader, backgroundColor: headerColor }}>
+                                        <th style={styles.th}>Document name</th>
+                                        <th style={styles.th}>Type</th>
+                                        <th style={styles.th}>Expiry date</th>
+                                        <th style={styles.th}>Days left</th>
+                                        <th style={styles.th}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {unread.map((doc, index) => (
+                                        <tr
+                                            key={doc.documentsId}
+                                            style={{
+                                                ...styles.tableRow,
+                                                backgroundColor: index % 2 === 0 ? "#fffdf0" : "#fff9e6",
+                                                fontWeight: "500"
+                                            }}
+                                        >
+                                            <td style={styles.td}>{doc.docsTitle}</td>
+                                            <td style={styles.td}>{formatType(doc.documentType)}</td>
+                                            <td style={styles.td}>{doc.docsExpireDate || "-"}</td>
+                                            <td style={styles.td}>
+                                                {doc.daysUntilExpiry !== null && doc.daysUntilExpiry !== undefined
+                                                    ? doc.daysUntilExpiry > 0
+                                                        ? `${doc.daysUntilExpiry} days`
+                                                        : "Expired"
+                                                    : "-"
+                                                }
+                                            </td>
+                                            <td style={styles.td}>
+                                                <div style={styles.btnGroup}>
+                                                    <button
+                                                        style={styles.openBtn}
+                                                        onClick={() => navigate(`/employee/documents/${doc.documentsId}`)}
+                                                    >
+                                                        Open
+                                                    </button>
+                                                    {doc.docsStatus === "EXPIRING_SOON" && (
+                                                        <button
+                                                            style={styles.readBtn}
+                                                            onClick={() => markAsRead(doc.documentsId)}
+                                                        >
+                                                            Mark as read
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
+
+                {read.length > 0 && (
+                    <>
+                        <p style={styles.subLabel}>Read</p>
+                        <div style={styles.tableWrapper}>
+                            <table style={styles.table}>
+                                <thead>
+                                    <tr style={{ ...styles.tableHeader, backgroundColor: "#888" }}>
+                                        <th style={styles.th}>Document name</th>
+                                        <th style={styles.th}>Type</th>
+                                        <th style={styles.th}>Expiry date</th>
+                                        <th style={styles.th}>Days left</th>
+                                        <th style={styles.th}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {read.map((doc, index) => (
+                                        <tr
+                                            key={doc.documentsId}
+                                            style={{
+                                                ...styles.tableRow,
+                                                backgroundColor: index % 2 === 0 ? "white" : "#f9f9f9",
+                                                opacity: 0.7
+                                            }}
+                                        >
+                                            <td style={styles.td}>{doc.docsTitle}</td>
+                                            <td style={styles.td}>{formatType(doc.documentType)}</td>
+                                            <td style={styles.td}>{doc.docsExpireDate || "-"}</td>
+                                            <td style={styles.td}>
+                                                {doc.daysUntilExpiry !== null && doc.daysUntilExpiry !== undefined
+                                                    ? doc.daysUntilExpiry > 0
+                                                        ? `${doc.daysUntilExpiry} days`
+                                                        : "Expired"
+                                                    : "-"
+                                                }
+                                            </td>
+                                            <td style={styles.td}>
+                                                <div style={styles.btnGroup}>
+                                                    <button
+                                                        style={styles.openBtn}
+                                                        onClick={() => navigate(`/employee/documents/${doc.documentsId}`)}
+                                                    >
+                                                        Open
+                                                    </button>
+                                                    {doc.docsStatus === "EXPIRING_SOON" && (
+                                                        <button
+                                                            style={styles.readBtn}
+                                                            onClick={() => markAsUnread(doc.documentsId)}
+                                                        >
+                                                            Mark as unread
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
+                )}
+
+                {docs.length === 0 && (
+                    <div style={styles.emptyBox}>No alerts.</div>
+                )}
+            </div>
+        );
+    };
 
     if (loading) return <h2>Loading...</h2>;
 
@@ -120,27 +246,8 @@ function AlertsPage() {
 
                 <h1 style={styles.title}>Alerts</h1>
 
-                {/* EXPIRING SOON */}
-                <div style={styles.section}>
-                    <div style={styles.sectionHeader}>
-                        <span style={styles.warningDot}></span>
-                        <h2 style={styles.sectionTitle}>
-                            Expiring soon ({expiring.length})
-                        </h2>
-                    </div>
-                    {renderTable(expiring, "#856404")}
-                </div>
-
-                {/* EXPIRED */}
-                <div style={styles.section}>
-                    <div style={styles.sectionHeader}>
-                        <span style={styles.dangerDot}></span>
-                        <h2 style={styles.sectionTitle}>
-                            Expired ({expired.length})
-                        </h2>
-                    </div>
-                    {renderTable(expired, "#721c24")}
-                </div>
+                {renderSection("Expiring soon", expiring, "#856404", "#f0ad4e")}
+                {renderSection("Expired", expired, "#721c24", "#d9534f")}
 
             </div>
         </div>
@@ -164,45 +271,54 @@ const styles = {
         marginBottom: "32px"
     },
     section: {
-        marginBottom: "40px"
+        marginBottom: "48px"
     },
     sectionHeader: {
         display: "flex",
         alignItems: "center",
         gap: "10px",
-        marginBottom: "12px"
+        marginBottom: "16px"
     },
     sectionTitle: {
         fontSize: "18px",
-        color: "#333"
+        color: "#333",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px"
     },
-    warningDot: {
+    dot: {
         width: "12px",
         height: "12px",
         borderRadius: "50%",
-        backgroundColor: "#856404",
         display: "inline-block"
     },
-    dangerDot: {
-        width: "12px",
-        height: "12px",
-        borderRadius: "50%",
-        backgroundColor: "#721c24",
-        display: "inline-block"
+    unreadBadge: {
+        backgroundColor: "#d9534f",
+        color: "white",
+        fontSize: "12px",
+        padding: "2px 8px",
+        borderRadius: "12px",
+        fontWeight: "bold"
+    },
+    subLabel: {
+        fontSize: "13px",
+        color: "#888",
+        fontWeight: "bold",
+        marginBottom: "8px",
+        marginTop: "12px"
     },
     tableWrapper: {
         backgroundColor: "white",
         borderRadius: "12px",
         boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
-        overflow: "hidden"
+        overflow: "hidden",
+        marginBottom: "16px"
     },
     table: {
         width: "100%",
         borderCollapse: "collapse"
     },
-    tableHeader: {
-        backgroundColor: "#1e3c72"
-    },
+    tableHeader: {},
     th: {
         padding: "14px 16px",
         textAlign: "left",
@@ -218,6 +334,10 @@ const styles = {
         fontSize: "14px",
         color: "#333"
     },
+    btnGroup: {
+        display: "flex",
+        gap: "8px"
+    },
     openBtn: {
         padding: "6px 14px",
         backgroundColor: "#1e3c72",
@@ -227,11 +347,22 @@ const styles = {
         fontSize: "13px",
         cursor: "pointer"
     },
-    emptyMsg: {
+    readBtn: {
+        padding: "6px 14px",
+        backgroundColor: "white",
+        color: "#1e3c72",
+        border: "1px solid #1e3c72",
+        borderRadius: "6px",
+        fontSize: "13px",
+        cursor: "pointer"
+    },
+    emptyBox: {
+        padding: "24px",
+        backgroundColor: "white",
+        borderRadius: "12px",
         textAlign: "center",
-        padding: "40px",
         color: "#888",
-        fontSize: "15px"
+        boxShadow: "0 5px 15px rgba(0,0,0,0.1)"
     }
 };
 

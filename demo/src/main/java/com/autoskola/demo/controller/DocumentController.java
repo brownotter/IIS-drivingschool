@@ -120,12 +120,29 @@ public class DocumentController {
     }
 
     @GetMapping("/expiring")
-    public ResponseEntity<List<DocumentsDto>> getExpiringDocuments() {
-        return ResponseEntity.ok(documentService.getExpiringDocuments());
+    public ResponseEntity<List<DocsAlertDto>> getExpiringDocuments() {
+        return ResponseEntity.ok(documentService.getExpiringDocumentsAlert());
     }
 
     @GetMapping("/expired")
-    public ResponseEntity<List<DocumentsDto>> getExpiredDocuments() {
-        return ResponseEntity.ok(documentService.getExpiredDocuments());
+    public ResponseEntity<List<DocsAlertDto>> getExpiredDocuments() {
+        return ResponseEntity.ok(documentService.getExpiredDocumentsAlert());
+    }
+
+    @GetMapping("/{documentId}/validity")
+    public ResponseEntity<DocsValidityDto> getDocumentValidity(
+            @PathVariable Long documentId
+    ) {
+        return ResponseEntity.ok(documentService.getDocumentValidity(documentId));
+    }
+
+    @PutMapping("/{documentId}/validity/read")
+    public ResponseEntity<String> markAsRead(@PathVariable Long documentId) {
+        return ResponseEntity.ok(documentService.markValidityAsRead(documentId));
+    }
+
+    @PutMapping("/{documentId}/validity/unread")
+    public ResponseEntity<String> markAsUnread(@PathVariable Long documentId) {
+        return ResponseEntity.ok(documentService.markValidityAsUnread(documentId));
     }
 }

@@ -168,7 +168,7 @@ function DocumentDetailsPage() {
             <div style={styles.main}>
 
                 <div style={styles.header}>
-                    <button style={styles.backBtn} onClick={() => navigate("/employee/documents")}>
+                    <button style={styles.backBtn} onClick={() => navigate(-1)}>
                         Back
                     </button>
                     <p style={styles.subtitle}>Document details</p>

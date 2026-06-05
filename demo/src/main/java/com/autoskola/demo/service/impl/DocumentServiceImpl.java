@@ -297,21 +297,103 @@ public class DocumentServiceImpl implements DocumentService {
                 .collect(Collectors.toList());
     }
 
+    private final DocsValidityRepository docsValidityRepository;
+
     @Override
-    public List<DocumentsDto> getExpiringDocuments() {
+    public DocsValidityDto getDocumentValidity(Long documentId) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        DocsValidity validity = docsValidityRepository.findByDocument(doc)
+                .orElseThrow(() -> new RuntimeException("Validity not found."));
+
+        DocsValidityDto dto = new DocsValidityDto();
+        dto.setDocsValidId(validity.getDocsValidId());
+        dto.setValidFrom(validity.getValidFrom());
+        dto.setValidUntil(validity.getValidUntil());
+        dto.setValidityDays(validity.getValidityDays());
+        dto.setIsExpired(validity.getIsExpired());
+        dto.setLastCheck(validity.getLastCheck());
+        dto.setValidityStatus(validity.getValidityStatus());
+        dto.setDaysUntilExpiry(validity.getDaysUntilExpiry());
+        dto.setNextCheckDate(validity.getNextCheckDate());
+        dto.setIsRead(validity.getIsRead());
+        dto.setDocumentId(doc.getDocumentsId());
+        dto.setDocumentTitle(doc.getDocsTitle());
+        return dto;
+    }
+
+    @Override
+    public String markValidityAsRead(Long documentId) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        DocsValidity validity = docsValidityRepository.findByDocument(doc)
+                .orElseThrow(() -> new RuntimeException("Validity not found."));
+
+        validity.setIsRead(true);
+        docsValidityRepository.save(validity);
+        return "Marked as read.";
+    }
+
+    @Override
+    public String markValidityAsUnread(Long documentId) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        DocsValidity validity = docsValidityRepository.findByDocument(doc)
+                .orElseThrow(() -> new RuntimeException("Validity not found."));
+
+        validity.setIsRead(false);
+        docsValidityRepository.save(validity);
+        return "Marked as unread.";
+    }
+
+    @Override
+    public List<DocsAlertDto> getExpiringDocumentsAlert() {
         return documentsRepository.findAll()
                 .stream()
                 .filter(doc -> doc.getDocsStatus() == DocumentStatus.EXPIRING_SOON)
-                .map(this::mapToDto)
+                .map(doc -> {
+                    DocsAlertDto dto = new DocsAlertDto();
+                    dto.setDocumentsId(doc.getDocumentsId());
+                    dto.setDocsTitle(doc.getDocsTitle());
+                    dto.setDocumentType(doc.getClass().getSimpleName().toUpperCase());
+                    dto.setDocsCreateDate(doc.getDocsCreateDate());
+                    dto.setDocsExpireDate(doc.getDocsExpireDate());
+                    dto.setDocsStatus(doc.getDocsStatus());
+
+                    docsValidityRepository.findByDocument(doc).ifPresent(v -> {
+                        dto.setDaysUntilExpiry(v.getDaysUntilExpiry());
+                        dto.setIsRead(v.getIsRead());
+                    });
+
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<DocumentsDto> getExpiredDocuments() {
+    public List<DocsAlertDto> getExpiredDocumentsAlert() {
         return documentsRepository.findAll()
                 .stream()
                 .filter(doc -> doc.getDocsStatus() == DocumentStatus.EXPIRED)
-                .map(this::mapToDto)
+                .map(doc -> {
+                    DocsAlertDto dto = new DocsAlertDto();
+                    dto.setDocumentsId(doc.getDocumentsId());
+                    dto.setDocsTitle(doc.getDocsTitle());
+                    dto.setDocumentType(doc.getClass().getSimpleName().toUpperCase());
+                    dto.setDocsCreateDate(doc.getDocsCreateDate());
+                    dto.setDocsExpireDate(doc.getDocsExpireDate());
+                    dto.setDocsStatus(doc.getDocsStatus());
+
+                    docsValidityRepository.findByDocument(doc).ifPresent(v -> {
+                        dto.setDaysUntilExpiry(v.getDaysUntilExpiry());
+                        dto.setIsRead(v.getIsRead());
+                    });
+
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
