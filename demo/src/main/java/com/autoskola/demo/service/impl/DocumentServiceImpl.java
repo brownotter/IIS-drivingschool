@@ -297,6 +297,24 @@ public class DocumentServiceImpl implements DocumentService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<DocumentsDto> getExpiringDocuments() {
+        return documentsRepository.findAll()
+                .stream()
+                .filter(doc -> doc.getDocsStatus() == DocumentStatus.EXPIRING_SOON)
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DocumentsDto> getExpiredDocuments() {
+        return documentsRepository.findAll()
+                .stream()
+                .filter(doc -> doc.getDocsStatus() == DocumentStatus.EXPIRED)
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     private Candidate getCandidateOrThrow(Long id) {
         return candidateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Candidate not found with id: " + id));

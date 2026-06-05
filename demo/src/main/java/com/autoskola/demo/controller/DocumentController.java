@@ -71,7 +71,6 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.deleteDocument(documentId));
     }
 
-    // Detalji dokumenta
     @GetMapping("/{documentId}")
     public ResponseEntity<Object> getDocumentDetails(
             @PathVariable Long documentId
@@ -118,5 +117,15 @@ public class DocumentController {
             @RequestParam(required = false) String documentType
     ) {
         return ResponseEntity.ok(documentService.searchDocuments(title, status, documentType));
+    }
+
+    @GetMapping("/expiring")
+    public ResponseEntity<List<DocumentsDto>> getExpiringDocuments() {
+        return ResponseEntity.ok(documentService.getExpiringDocuments());
+    }
+
+    @GetMapping("/expired")
+    public ResponseEntity<List<DocumentsDto>> getExpiredDocuments() {
+        return ResponseEntity.ok(documentService.getExpiredDocuments());
     }
 }

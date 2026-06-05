@@ -15,6 +15,7 @@ import DocumentDetailsPage from "./pages/Employee/DocumentDetailsPage";
 import EditDocumentPage from "./pages/Employee/EditDocumentPage";
 import CandidatesPage from "./pages/Employee/CandidatesPage";
 import CandidateDocumentsPage from "./pages/Employee/CandidateDocumentsPage";
+import AlertsPage from "./pages/Employee/AlertsPage";
 import ProfessorDashboard from "./pages/Professor/ProfessorDashboard";
 import ProfessorSchedule from "./pages/Professor/ProfessorSchedule";
 import ProfessorClassDetails from "./pages/Professor/ProfessorClassDetails";
@@ -141,6 +142,11 @@ function App() {
             <Route
                 path="/employee/candidates/:candidateId/documents"
                 element={<CandidateDocumentsPage />}
+            />
+
+            <Route
+                path="/employee/alerts"
+                element={<AlertsPage />}
             />
 
                 <Route 

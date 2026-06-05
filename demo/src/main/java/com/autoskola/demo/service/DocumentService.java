@@ -24,4 +24,7 @@ public interface DocumentService {
     DocumentsDto updateExamResult(Long documentId, ExamResultDto dto);
 
     List<DocumentsDto> searchDocuments(String title, DocumentStatus status, String documentType);
+
+    List<DocumentsDto> getExpiringDocuments();
+    List<DocumentsDto> getExpiredDocuments();
 }

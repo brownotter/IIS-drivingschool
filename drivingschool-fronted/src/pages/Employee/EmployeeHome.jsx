@@ -76,6 +76,13 @@ const styles = {
         alignItems: "flex-start"
     },
 
+    center: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center"
+    },
+
     schoolName: {
         color: "#1e3c72",
         fontSize: "36px",
