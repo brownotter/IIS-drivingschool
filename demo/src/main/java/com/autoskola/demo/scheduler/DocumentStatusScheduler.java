@@ -1,4 +1,4 @@
-package com.autoskola.demo.service;
+package com.autoskola.demo.scheduler;
 
 import com.autoskola.demo.model.*;
 import com.autoskola.demo.repository.DocumentsRepository;
