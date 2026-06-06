@@ -138,3 +138,12 @@ export const updateExamResult = async (documentId, data) => {
     if (!response.ok) throw new Error("Failed to update document.");
     return response.json();
 };
+
+export const getDocumentValidity = async (documentId) => {
+    const response = await fetch(
+        `http://localhost:8080/documents/${documentId}/validity`,
+        { credentials: "include" }
+    );
+    if (!response.ok) return null;
+    return response.json();
+};

@@ -24,4 +24,10 @@ public interface DocumentService {
     DocumentsDto updateExamResult(Long documentId, ExamResultDto dto);
 
     List<DocumentsDto> searchDocuments(String title, DocumentStatus status, String documentType);
+
+    DocsValidityDto getDocumentValidity(Long documentId);
+    String markValidityAsRead(Long documentId);
+    String markValidityAsUnread(Long documentId);
+    List<DocsAlertDto> getExpiringDocumentsAlert();
+    List<DocsAlertDto> getExpiredDocumentsAlert();
 }

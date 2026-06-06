@@ -314,7 +314,7 @@ function CreateDocumentPage() {
             <div style={styles.main}>
 
                 <div style={styles.header}>
-                    <button style={styles.backBtn} onClick={() => navigate("/employee")}>Back</button>
+                    <button style={styles.backBtn} onClick={() => navigate(-1)}>Back</button>
                     <h1 style={styles.title}>Create new document</h1>
                 </div>
 

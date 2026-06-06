@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { getDocumentDetails } from "../../services/documentService";
+import { getDocumentDetails, getDocumentValidity } from "../../services/documentService";
 
 function DocumentDetailsPage() {
     const navigate = useNavigate();
@@ -9,6 +9,8 @@ function DocumentDetailsPage() {
 
     const [doc, setDoc] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const [validity, setValidity] = useState(null);
 
     useEffect(() => {
         loadDocument();
@@ -18,6 +20,12 @@ function DocumentDetailsPage() {
         try {
             const data = await getDocumentDetails(id);
             setDoc(data);
+            try {
+            const validityData = await getDocumentValidity(id);
+            setValidity(validityData);
+        } catch (err) {
+            //ne postoji validy zapis
+        }
         } catch (err) {
             navigate("/employee/documents");
         } finally {
@@ -168,7 +176,7 @@ function DocumentDetailsPage() {
             <div style={styles.main}>
 
                 <div style={styles.header}>
-                    <button style={styles.backBtn} onClick={() => navigate("/employee/documents")}>
+                    <button style={styles.backBtn} onClick={() => navigate(-1)}>
                         Back
                     </button>
                     <p style={styles.subtitle}>Document details</p>
@@ -239,6 +247,34 @@ function DocumentDetailsPage() {
 
                 </div>
 
+                <div style={styles.alertsCard}>
+                    <h3 style={styles.alertsTitle}>
+                        Alerts 
+                    </h3>
+
+                    {validity && (validity.validityStatus === "EXPIRING_SOON" || validity.validityStatus === "EXPIRED") ? (
+                        <div style={styles.alertItem}>
+                            <span style={{
+                                ...styles.alertBadge,
+                                color: validity.validityStatus === "EXPIRED" ? "#721c24" : "#856404",
+                                backgroundColor: validity.validityStatus === "EXPIRED" ? "#f8d7da" : "#fff3cd"
+                            }}>
+                                {validity.validityStatus === "EXPIRED"
+                                    ? "EXPIRED"
+                                    : `EXPIRES IN ${validity.daysUntilExpiry} DAYS`
+                                }
+                            </span>
+                            <span style={styles.alertDate}>
+                                Valid until: {validity.validUntil || "-"}
+                            </span>
+                            <span style={styles.alertDate}>
+                                Last check: {validity.lastCheck || "-"}
+                            </span>
+                        </div>
+                    ) : (
+                        <p style={styles.noAlerts}>No alerts for this document</p>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -339,7 +375,44 @@ const styles = {
         cursor: "pointer",
         fontWeight: "bold",
         textAlign: "center"
+    },
+    alertsCard: {
+    backgroundColor: "white",
+    padding: "20px 24px",
+    borderRadius: "12px",
+    boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+    marginTop: "20px"
+    },
+    alertsTitle: {
+        fontSize: "15px",
+        color: "#1e3c72",
+        marginBottom: "12px"
+    },
+    alertItem: {
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        padding: "12px",
+        borderRadius: "8px",
+        border: "1px solid #eee",
+        backgroundColor: "#fafafa"
+    },
+    alertBadge: {
+        fontSize: "13px",
+        fontWeight: "bold",
+        padding: "4px 10px",
+        borderRadius: "20px"
+    },
+    alertDate: {
+        fontSize: "13px",
+        color: "#888"
+    },
+    noAlerts: {
+    color: "#888",
+    fontSize: "14px",
+    padding: "8px 0"
     }
+    
 };
 
 export default DocumentDetailsPage;

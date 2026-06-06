@@ -1,8 +1,27 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
+import { getActiveAlerts } from "../../services/employeeService";
 
 function EmployeeHome() {
     const navigate = useNavigate();
+    const [expiring, setExpiring] = useState([]);
+    const [expired, setExpired] = useState([]);
+    const [hoveredAlert, setHoveredAlert] = useState(null);
+
+    useEffect(() => {
+        loadAlerts();
+    }, []);
+
+    const loadAlerts = async () => {
+        try {
+            const { expiring, expired } = await getActiveAlerts();
+            setExpiring(expiring);
+            setExpired(expired);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
@@ -12,6 +31,11 @@ function EmployeeHome() {
         localStorage.clear();
         navigate("/");
     };
+
+    const allAlerts = [
+        ...expired.map(d => ({ ...d, alertType: "EXPIRED" })),
+        ...expiring.map(d => ({ ...d, alertType: "EXPIRING_SOON" }))
+    ];
 
     return (
         <div style={styles.container}>
@@ -51,6 +75,67 @@ function EmployeeHome() {
 
                     </div>
 
+                    <div style={styles.alertsCard}>
+                    <div style={styles.alertsHeader}>
+                        <h2 style={styles.alertsTitle}>
+                            Active alerts
+                            {allAlerts.length > 0 && (
+                                <span style={styles.alertsBadge}>{allAlerts.length}</span>
+                            )}
+                        </h2>
+                        <button
+                            style={styles.viewAllBtn}
+                            onClick={() => navigate("/employee/alerts")}
+                        >
+                            View all
+                        </button>
+                    </div>
+
+                    {allAlerts.length === 0 ? (
+                        <p style={styles.noAlerts}>No active alerts.</p>
+                    ) : (
+                        <div style={{... styles.alertsList, maxHeight: "280px", overflowY: "auto", overflowX: "hidden"}}>
+                            {allAlerts.map((doc) => (
+                                <div
+                                    key={doc.documentsId}
+                                    style={{
+                                        ...styles.alertItem,
+                                        backgroundColor: hoveredAlert === doc.documentsId ? "#f0f4ff" : "#fafafa",
+                                        borderColor: hoveredAlert === doc.documentsId ? "#1e3c72" : "#eee",
+                                        transform: hoveredAlert === doc.documentsId ? "translateX(4px)" : "none",
+                                        transition: "all 0.15s ease"
+                                    }}
+                                    onClick={() => navigate(`/employee/documents/${doc.documentsId}`)}
+                                    onMouseEnter={() => setHoveredAlert(doc.documentsId)}
+                                    onMouseLeave={() => setHoveredAlert(null)}
+                                >
+                                    <div style={styles.alertLeft}>
+                                        <span style={styles.alertName}>
+                                            {doc.candidateName} — {doc.docsTitle}
+                                        </span>
+                                        <span style={styles.alertDate}>
+                                            {doc.docsExpireDate
+                                                ? `Expires ${doc.docsExpireDate}`
+                                                : "No expiry date"
+                                            }
+                                        </span>
+                                    </div>
+                                    <span style={{
+                                        ...styles.alertBadge,
+                                        color: doc.alertType === "EXPIRED" ? "#721c24" : "#856404",
+                                        backgroundColor: doc.alertType === "EXPIRED" ? "#f8d7da" : "#fff3cd"
+                                    }}>
+                                        {doc.alertType === "EXPIRED"
+                                            ? "EXPIRED"
+                                            : `${doc.daysUntilExpiry} DAYS`
+                                        }
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 </div>
 
             </div>
@@ -74,6 +159,13 @@ const styles = {
         display: "flex",
         flexDirection: "column",
         alignItems: "flex-start"
+    },
+
+    center: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center"
     },
 
     schoolName: {
@@ -105,6 +197,98 @@ const styles = {
         fontSize: "15px",
         fontWeight: "bold",
         cursor: "pointer"
+    },
+
+    alertsCard: {
+        backgroundColor: "white",
+        borderRadius: "12px",
+        boxShadow: "0 5px 15px rgba(0,0,0,0.1)",
+        padding: "24px",
+        width: "100%",
+        maxWidth: "600px",
+        marginTop: "30px"
+    },
+
+    alertsHeader: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "16px"
+    },
+
+    alertsTitle: {
+        fontSize: "16px",
+        color: "#1e3c72",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px"
+    },
+
+    alertsBadge: {
+        backgroundColor: "#d9534f",
+        color: "white",
+        fontSize: "12px",
+        padding: "2px 8px",
+        borderRadius: "12px",
+        fontWeight: "bold"
+    },
+
+    viewAllBtn: {
+        padding: "6px 14px",
+        backgroundColor: "white",
+        color: "#1e3c72",
+        border: "1px solid #1e3c72",
+        borderRadius: "6px",
+        fontSize: "13px",
+        cursor: "pointer"
+    },
+
+    noAlerts: {
+        color: "#888",
+        fontSize: "14px",
+        textAlign: "center",
+        padding: "20px 0"
+    },
+
+    alertsList: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px"
+    },
+
+    alertItem: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "12px 16px",
+        borderRadius: "8px",
+        border: "1px solid #eee",
+        cursor: "pointer",
+        backgroundColor: "#fafafa"
+    },
+
+    alertLeft: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px"
+    },
+
+    alertName: {
+        fontSize: "14px",
+        fontWeight: "500",
+        color: "#333"
+    },
+
+    alertDate: {
+        fontSize: "12px",
+        color: "#888"
+    },
+
+    alertBadge: {
+        fontSize: "13px",
+        fontWeight: "bold",
+        padding: "4px 10px",
+        borderRadius: "20px"
     }
 };
 

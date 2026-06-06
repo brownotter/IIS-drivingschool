@@ -21,3 +21,15 @@ export const updateEmployeeProfile = async (data) => {
     if (!response.ok) throw new Error("Failed to update profile.");
     return response.text();
 };
+
+export const getActiveAlerts = async () => {
+    const [expiringRes, expiredRes] = await Promise.all([
+        fetch("http://localhost:8080/documents/expiring", { credentials: "include" }),
+        fetch("http://localhost:8080/documents/expired", { credentials: "include" })
+    ]);
+
+    const expiring = await expiringRes.json();
+    const expired = await expiredRes.json();
+
+    return { expiring, expired };
+};
