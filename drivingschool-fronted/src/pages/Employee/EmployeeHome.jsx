@@ -7,6 +7,7 @@ function EmployeeHome() {
     const navigate = useNavigate();
     const [expiring, setExpiring] = useState([]);
     const [expired, setExpired] = useState([]);
+    const [hoveredAlert, setHoveredAlert] = useState(null);
 
     useEffect(() => {
         loadAlerts();
@@ -93,12 +94,20 @@ function EmployeeHome() {
                     {allAlerts.length === 0 ? (
                         <p style={styles.noAlerts}>No active alerts.</p>
                     ) : (
-                        <div style={styles.alertsList}>
+                        <div style={{... styles.alertsList, maxHeight: "280px", overflowY: "auto", overflowX: "hidden"}}>
                             {allAlerts.map((doc) => (
                                 <div
                                     key={doc.documentsId}
-                                    style={styles.alertItem}
+                                    style={{
+                                        ...styles.alertItem,
+                                        backgroundColor: hoveredAlert === doc.documentsId ? "#f0f4ff" : "#fafafa",
+                                        borderColor: hoveredAlert === doc.documentsId ? "#1e3c72" : "#eee",
+                                        transform: hoveredAlert === doc.documentsId ? "translateX(4px)" : "none",
+                                        transition: "all 0.15s ease"
+                                    }}
                                     onClick={() => navigate(`/employee/documents/${doc.documentsId}`)}
+                                    onMouseEnter={() => setHoveredAlert(doc.documentsId)}
+                                    onMouseLeave={() => setHoveredAlert(null)}
                                 >
                                     <div style={styles.alertLeft}>
                                         <span style={styles.alertName}>
@@ -214,6 +223,7 @@ const styles = {
         alignItems: "center",
         gap: "8px"
     },
+
     alertsBadge: {
         backgroundColor: "#d9534f",
         color: "white",
@@ -222,6 +232,7 @@ const styles = {
         borderRadius: "12px",
         fontWeight: "bold"
     },
+
     viewAllBtn: {
         padding: "6px 14px",
         backgroundColor: "white",
@@ -231,17 +242,20 @@ const styles = {
         fontSize: "13px",
         cursor: "pointer"
     },
+
     noAlerts: {
         color: "#888",
         fontSize: "14px",
         textAlign: "center",
         padding: "20px 0"
     },
+
     alertsList: {
         display: "flex",
         flexDirection: "column",
         gap: "8px"
     },
+
     alertItem: {
         display: "flex",
         justifyContent: "space-between",
@@ -252,20 +266,24 @@ const styles = {
         cursor: "pointer",
         backgroundColor: "#fafafa"
     },
+
     alertLeft: {
         display: "flex",
         flexDirection: "column",
         gap: "4px"
     },
+
     alertName: {
         fontSize: "14px",
         fontWeight: "500",
         color: "#333"
     },
+
     alertDate: {
         fontSize: "12px",
         color: "#888"
     },
+
     alertBadge: {
         fontSize: "13px",
         fontWeight: "bold",
