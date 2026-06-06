@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 function Instructors() {
     const [instructors, setInstructors] = useState([]);
     
-    // Stanja za formu ZA DODAVANJE novog instruktora
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [firstName, setFirstName] = useState("");
@@ -14,19 +13,15 @@ function Instructors() {
     const [contact, setContact] = useState("");
     const [licenceNumber, setLicenceNumber] = useState("");
     const [teachingCategory, setTeachingCategory] = useState("B"); 
-    
-    // Stanje za instruktora koji se trenutno pregleda/menja
+
     const [selectedInstructor, setSelectedInstructor] = useState(null);
     
-    // Prati da li smo u modu za izmenu svih detalja
     const [isEditing, setIsEditing] = useState(false);
-    
-    // Prati da li unutar modala prikazujemo potvrdu za brisanje (arhiviranje)
+
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     
-    // Stanja za filtriranje
     const [categoryFilter, setCategoryFilter] = useState("ALL");
     const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -128,7 +123,7 @@ function Instructors() {
                     const data = await response.text(); 
                     
                     if (response.ok) {
-                        // Ako je uporedo promenjen i status, pošalji i PATCH zahtev
+
                         if (originalInstructor && originalInstructor.status !== selectedInstructor.status) {
                             sendLineStatusUpdate(selectedInstructor.id, selectedInstructor.status);
                         } else {
@@ -209,7 +204,6 @@ function Instructors() {
         window.location.href = "/";
     };
 
-    // Helper funkcija za dinamičko bojenje input polja ako backend baci grešku
     const getInputStyle = (fieldKeyword) => {
         const hasError = errorMessage && errorMessage.toLowerCase().includes(fieldKeyword);
         return {
@@ -242,7 +236,6 @@ function Instructors() {
                 
                 <p style={styles.subtitle}>Click on instructor for more details</p>
 
-                {/* FILTRIRANJE */}
                 <div style={{ display: "flex", gap: "20px", marginBottom: "25px", alignItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                         <label style={{ fontSize: "14px", fontWeight: "bold", color: "#555" }}>Filter by Category:</label>
@@ -264,7 +257,6 @@ function Instructors() {
                     </div>
                 </div>
 
-                {/* MODAL ZA DODAVANJE NOVOG INSTRUKTORA */}
                 {showForm && (
                     <div style={styles.modalOverlay} onClick={() => { setShowForm(false); setErrorMessage(""); }}>
                         <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -304,7 +296,6 @@ function Instructors() {
                     </div>
                 )}
 
-                {/* MODAL ZA DETALJE/IZMENU */}
                 {selectedInstructor && (
                     <div style={styles.modalOverlay} onClick={() => { if(!showDeleteConfirm) finalizeUpdate(); }}>
                         <div style={styles.modalContentRelative} onClick={(e) => e.stopPropagation()}>
@@ -412,7 +403,6 @@ function Instructors() {
                     </div>
                 )}
 
-                {/* GRID SA KARTICAMA INSTRUKTORA */}
                 <div style={styles.gridContainer}>
                     {instructors
                         .filter((i) => {

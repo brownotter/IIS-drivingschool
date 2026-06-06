@@ -5,25 +5,20 @@ import { useNavigate } from "react-router-dom";
 function Vehicles() {
     const [vehicles, setVehicles] = useState([]);
     
-    // Stanja za formu ZA DODAVANJE novog vozila
     const [brand, setBrand] = useState("");
     const [model, setModel] = useState("");
     const [registrationPlate, setRegistrationPlate] = useState("");
     const [manufactureYear, setManufactureYear] = useState("");
     const [category, setCategory] = useState("B"); 
     
-    // Stanje za vozilo koje se trenutno pregleda/menja
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     
-    // Prati da li smo u modu za izmenu svih detalja (samo za admina)
     const [isEditing, setIsEditing] = useState(false);
     
-    // Prati da li unutar modala prikazujemo potvrdu za brisanje
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     
-    // Nova stanja za filtriranje (podrazumevano postavljena na "ALL")
     const [categoryFilter, setCategoryFilter] = useState("ALL");
     const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -273,7 +268,6 @@ function Vehicles() {
                     </div>
                 </div>
 
-                {/* MODAL ZA DODAVANJE NOVOG VOZILA */}
                 {showForm && (
                     <div style={styles.modalOverlay} onClick={() => { setShowForm(false); setErrorMessage(""); }}>
                         <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -333,7 +327,6 @@ function Vehicles() {
                     </div>
                 )}
 
-                {/* MODAL ZA DETALJE/IZMENU */}
                 {selectedVehicle && (
                     <div style={styles.modalOverlay} onClick={() => { if(!showDeleteConfirm) finalizeUpdate(); }}>
                         <div style={styles.modalContentRelative} onClick={(e) => e.stopPropagation()}>
