@@ -30,8 +30,6 @@ public interface TheoryClassRepository
             LocalDate end
     );
 
-    List<TheoryClass> findByProfessor(User professor);
-
     boolean existsByProfessorAndTheoryDateAndTheoryStartTimeLessThanAndTheoryEndTimeGreaterThan(
             User professor,
             LocalDate theoryDate,

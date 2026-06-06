@@ -29,24 +29,18 @@ public class TheoryClassServiceImpl implements TheoryClassService {
     @Override
     public void createTheoryClass(CreateTheoryClassDto dto) {
 
-        User professor = userRepository.findById(dto.getProfessorId())
-                .orElseThrow(() -> new RuntimeException("Professor not found"));
+        User professor = userRepository.findById(dto.getProfessorId()).orElseThrow(() -> new RuntimeException("Professor not found"));
 
         if (professor.getRole() != Role.PROFESSOR) {
             throw new RuntimeException("User is not a professor");
         }
 
-        Domain domain = domainRepository.findById(dto.getDomainId())
-                .orElseThrow(() -> new RuntimeException("Domain not found"));
+        Domain domain = domainRepository.findById(dto.getDomainId()).orElseThrow(() -> new RuntimeException("Domain not found"));
 
-        boolean hasAvailability =
-                availabilityRepository.findByProfessorAndAvailableDateBetween(
-                                professor,
-                                dto.getTheoryDate(),
-                                dto.getTheoryDate()
-                        )
+        boolean hasAvailability = availabilityRepository.findByProfessorAndAvailableDateBetween(
+                                professor, dto.getTheoryDate(), dto.getTheoryDate())
                         .stream()
-                        .anyMatch(a ->
+                            .anyMatch(a ->
                                 !dto.getTheoryStartTime().isBefore(a.getStartTime())
                                         && !dto.getTheoryEndTime().isAfter(a.getEndTime())
                         );
@@ -55,8 +49,7 @@ public class TheoryClassServiceImpl implements TheoryClassService {
             throw new RuntimeException("Professor is not available");
         }
 
-        boolean overlap =
-                theoryClassRepository
+        boolean overlap = theoryClassRepository
                         .existsByProfessorAndTheoryDateAndTheoryStartTimeLessThanAndTheoryEndTimeGreaterThan(
                                 professor,
                                 dto.getTheoryDate(),
@@ -85,8 +78,7 @@ public class TheoryClassServiceImpl implements TheoryClassService {
         for (Long candidateId : dto.getCandidateIds()) {
 
             Candidate candidate = candidateRepository.findById(candidateId)
-                    .orElseThrow(() ->
-                            new RuntimeException("Candidate not found"));
+                    .orElseThrow(() -> new RuntimeException("Candidate not found"));
 
             TheoryClassAttendance attendance = new TheoryClassAttendance();
 
@@ -311,7 +303,6 @@ public class TheoryClassServiceImpl implements TheoryClassService {
         TheoryClass tc = theoryClassRepository.findById(theoryClassId)
                 .orElseThrow(() -> new RuntimeException("Theory class not found"));
 
-        // Koristi se izmenjeni CandidateTheoryAttendanceInfoDto šablon
         List<CandidateTheoryAttendanceInfoDto> candidateList = tc.getAttendances().stream()
                 .filter(a -> a.getStatus() != TheoryClassAttendanceStatus.CANCELLED)
                 .map(a -> new CandidateTheoryAttendanceInfoDto(
@@ -365,8 +356,7 @@ public class TheoryClassServiceImpl implements TheoryClassService {
     ) {
 
         Candidate candidate =
-                candidateRepository.findById(candidateId)
-                        .orElseThrow(() ->
+                candidateRepository.findById(candidateId).orElseThrow(() ->
                                 new RuntimeException("Candidate not found"));
 
         TheoryClass theoryClass =
@@ -406,25 +396,19 @@ public class TheoryClassServiceImpl implements TheoryClassService {
             Long theoryClassId
     ) {
 
-        Candidate candidate =
-                candidateRepository.findById(candidateId)
-                        .orElseThrow(() ->
+        Candidate candidate = candidateRepository.findById(candidateId).orElseThrow(() ->
                                 new RuntimeException("Candidate not found"));
 
-        TheoryClass theoryClass =
-                theoryClassRepository.findById(theoryClassId)
-                        .orElseThrow(() ->
+        TheoryClass theoryClass = theoryClassRepository.findById(theoryClassId).orElseThrow(() ->
                                 new RuntimeException("Theory class not found"));
 
         if (
-                theoryClass.getCurrentEnrolled()
-                        >= theoryClass.getCapacity()
+                theoryClass.getCurrentEnrolled() >= theoryClass.getCapacity()
         ) {
             throw new RuntimeException("Class is full");
         }
 
-        boolean alreadyExists =
-                attendanceRepository
+        boolean alreadyExists = attendanceRepository
                         .existsByCandidateAndTheoryClassAndStatus(
                                 candidate,
                                 theoryClass,
@@ -435,8 +419,7 @@ public class TheoryClassServiceImpl implements TheoryClassService {
             throw new RuntimeException("Candidate already enrolled");
         }
 
-        TheoryClassAttendance attendance =
-                new TheoryClassAttendance();
+        TheoryClassAttendance attendance = new TheoryClassAttendance();
 
         attendance.setCandidate(candidate);
         attendance.setTheoryClass(theoryClass);
@@ -446,8 +429,6 @@ public class TheoryClassServiceImpl implements TheoryClassService {
         );
 
         attendanceRepository.save(attendance);
-
-        //theoryClass.getAttendances().add(attendance);
 
         Integer enrolledCount = attendanceRepository
                 .countByTheoryClassAndStatus(

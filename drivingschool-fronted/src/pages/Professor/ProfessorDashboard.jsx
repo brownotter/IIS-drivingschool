@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import { useNavigate } from "react-router-dom";
-// Uvozimo tabelu koju smo kreirali u Koraku 1
 import ProfessorCandidatesTable from "./ProfessorCandidatesTable"; 
 
 function ProfessorDashboard() {
@@ -90,7 +89,7 @@ const styles = {
     content: {
         flex: 1,
         padding: "40px",
-        backgroundColor: "#f4f6f9"
+        backgroundColor: "#f9f4f5"
     },
     card: {
         backgroundColor: "white",
