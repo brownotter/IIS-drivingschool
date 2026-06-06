@@ -9,6 +9,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -354,6 +355,8 @@ public class DocumentServiceImpl implements DocumentService {
         return documentsRepository.findAll()
                 .stream()
                 .filter(doc -> doc.getDocsStatus() == DocumentStatus.EXPIRING_SOON)
+                .sorted(Comparator.comparing(Documents::getDocsExpireDate,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(doc -> {
                     DocsAlertDto dto = new DocsAlertDto();
                     dto.setDocumentsId(doc.getDocumentsId());
@@ -362,6 +365,7 @@ public class DocumentServiceImpl implements DocumentService {
                     dto.setDocsCreateDate(doc.getDocsCreateDate());
                     dto.setDocsExpireDate(doc.getDocsExpireDate());
                     dto.setDocsStatus(doc.getDocsStatus());
+                    dto.setCandidateName(doc.getCandidate().getFirstName() + " " + doc.getCandidate().getLastName());
 
                     docsValidityRepository.findByDocument(doc).ifPresent(v -> {
                         dto.setDaysUntilExpiry(v.getDaysUntilExpiry());
@@ -378,6 +382,8 @@ public class DocumentServiceImpl implements DocumentService {
         return documentsRepository.findAll()
                 .stream()
                 .filter(doc -> doc.getDocsStatus() == DocumentStatus.EXPIRED)
+                .sorted(Comparator.comparing(Documents::getDocsExpireDate,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(doc -> {
                     DocsAlertDto dto = new DocsAlertDto();
                     dto.setDocumentsId(doc.getDocumentsId());
@@ -386,6 +392,7 @@ public class DocumentServiceImpl implements DocumentService {
                     dto.setDocsCreateDate(doc.getDocsCreateDate());
                     dto.setDocsExpireDate(doc.getDocsExpireDate());
                     dto.setDocsStatus(doc.getDocsStatus());
+                    dto.setCandidateName(doc.getCandidate().getFirstName() + " " + doc.getCandidate().getLastName());
 
                     docsValidityRepository.findByDocument(doc).ifPresent(v -> {
                         dto.setDaysUntilExpiry(v.getDaysUntilExpiry());

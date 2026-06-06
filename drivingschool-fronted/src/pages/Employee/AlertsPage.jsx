@@ -104,6 +104,7 @@ function AlertsPage() {
                                 <thead>
                                     <tr style={{ ...styles.tableHeader, backgroundColor: headerColor }}>
                                         <th style={styles.th}>Document name</th>
+                                        <th style={styles.th}>Candidate</th>
                                         <th style={styles.th}>Type</th>
                                         <th style={styles.th}>Expiry date</th>
                                         <th style={styles.th}>Days left</th>
@@ -121,6 +122,7 @@ function AlertsPage() {
                                             }}
                                         >
                                             <td style={styles.td}>{doc.docsTitle}</td>
+                                            <td style={styles.td}>{doc.candidateName || "-"}</td>
                                             <td style={styles.td}>{formatType(doc.documentType)}</td>
                                             <td style={styles.td}>{doc.docsExpireDate || "-"}</td>
                                             <td style={styles.td}>

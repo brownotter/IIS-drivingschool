@@ -14,4 +14,5 @@ public class DocsAlertDto {
     private DocumentStatus docsStatus;
     private Integer daysUntilExpiry;
     private Boolean isRead;
+    private String candidateName;
 }
