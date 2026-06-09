@@ -31,4 +31,8 @@ public class DocsVersion {
 
     @Column(length = 500)
     private String changeDescription;
+
+    @Column(columnDefinition = "TEXT")
+    private String snapshotData;
+
 }

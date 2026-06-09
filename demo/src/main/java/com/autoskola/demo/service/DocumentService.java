@@ -32,4 +32,5 @@ public interface DocumentService {
     List<DocsAlertDto> getExpiredDocumentsAlert();
 
     List<DocsVersionDto> getDocumentVersions(Long documentId);
+    DocumentsDto restoreVersion(Long documentId, Long versionId);
 }

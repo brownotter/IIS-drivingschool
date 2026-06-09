@@ -152,4 +152,13 @@ public class DocumentController {
     ) {
         return ResponseEntity.ok(documentService.getDocumentVersions(documentId));
     }
+
+    @PutMapping("/{documentId}/versions/{versionId}/restore")
+    public ResponseEntity<DocumentsDto> restoreVersion(
+            @PathVariable Long documentId,
+            @PathVariable Long versionId
+    ) {
+        return ResponseEntity.ok(documentService.restoreVersion(documentId, versionId));
+    }
+
 }

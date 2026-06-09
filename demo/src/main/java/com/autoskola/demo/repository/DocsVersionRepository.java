@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface DocsVersionRepository extends JpaRepository<DocsVersion, Long> {
-    List<DocsVersion> findByDocumentOrderByVersionNumDesc(Documents document);
+    List<DocsVersion> findByDocumentOrderByChangeTimeDesc(Documents document);
 }

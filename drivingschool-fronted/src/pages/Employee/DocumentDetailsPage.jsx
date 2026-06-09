@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { getDocumentDetails, getDocumentValidity, getDocumentVersions } from "../../services/documentService";
+import { getDocumentDetails, getDocumentValidity, getDocumentVersions, restoreDocumentVersion } from "../../services/documentService";
 
 function DocumentDetailsPage() {
     const navigate = useNavigate();
@@ -13,6 +13,7 @@ function DocumentDetailsPage() {
     const [validity, setValidity] = useState(null);
 
     const [versions, setVersions] = useState([]);
+    const [previewVersion, setPreviewVersion] = useState(null);
 
     useEffect(() => {
         loadDocument();
@@ -42,6 +43,41 @@ function DocumentDetailsPage() {
             setLoading(false);
         }
     };
+
+    const handleRestore = async (versionId) => {
+    if (!window.confirm("Are you sure you want to restore this version?")) return;
+    try {
+        await restoreDocumentVersion(id, versionId);
+        loadDocument();
+    } catch (err) {
+        console.error(err);
+    }
+    };
+
+    const fieldLabels = {
+    docsTitle: "Document name",
+    docsStatus: "Status",
+    docsExpireDate: "Expiry date",
+    docsCreateDate: "Created date",
+    docsModfDate: "Last modified",
+    currentVersion: "Version",
+    institution: "Institution",
+    doctorName: "Doctor",
+    medResult: "Result",
+    medExamDate: "Exam date",
+    contNumb: "Contract number",
+    contStartDate: "Start date",
+    ammountCont: "Amount",
+    cerfNumb: "Certificate number",
+    cerfDate: "Certificate date",
+    validDate: "Valid date",
+    examType: "Exam type",
+    examRefNum: "Reference number",
+    examScore: "Score",
+    issueDate: "Issue date"
+    };
+
+    const hiddenFields = ["documentsId", "documentType"];
 
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
@@ -304,8 +340,59 @@ function DocumentDetailsPage() {
                                                 {v.changedBy} — {v.changeTime ? v.changeTime.replace("T", " ").substring(0, 16) : "-"}
                                             </span>
                                         </div>
+                                        <button
+                                            style={styles.restoreBtn}
+                                            onClick={() => setPreviewVersion(v)}
+                                        >
+                                            Preview & Restore
+                                        </button>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {previewVersion && previewVersion.snapshotData && (
+                            <div style={styles.modalOverlay}>
+                                <div style={styles.modal}>
+                                    <h3 style={styles.modalTitle}>
+                                        Preview — V{previewVersion.versionNum}
+                                    </h3>
+                                    <p style={styles.modalMeta}>
+                                        {previewVersion.changedBy} — {previewVersion.changeTime?.replace("T", " ").substring(0, 16)}
+                                    </p>
+
+                                    <div style={styles.modalFields}>
+                                        {Object.entries(JSON.parse(previewVersion.snapshotData))
+                                            .filter(([key]) => !hiddenFields.includes(key))
+                                            .map(([key, value]) => (
+                                                <div key={key} style={styles.modalField}>
+                                                    <label style={styles.modalLabel}>
+                                                        {fieldLabels[key] || key}
+                                                    </label>
+                                                    <div style={styles.modalValue}>{value?.toString() || "-"}</div>
+                                                </div>
+                                            ))
+                                        }
+                                    </div>
+
+                                    <div style={styles.modalButtons}>
+                                        <button
+                                            style={styles.restoreConfirmBtn}
+                                            onClick={() => {
+                                                handleRestore(previewVersion.versionId);
+                                                setPreviewVersion(null);
+                                            }}
+                                        >
+                                            Restore this version
+                                        </button>
+                                        <button
+                                            style={styles.cancelBtn}
+                                            onClick={() => setPreviewVersion(null)}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -479,6 +566,92 @@ const styles = {
     versionMeta: {
         fontSize: "12px",
         color: "#888"
+    },
+    restoreBtn: {
+    marginLeft: "auto",
+    padding: "4px 12px",
+    backgroundColor: "white",
+    color: "#1e3c72",
+    border: "1px solid #1e3c72",
+    borderRadius: "6px",
+    fontSize: "12px",
+    cursor: "pointer"
+    },
+    modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000
+    },
+    modal: {
+        backgroundColor: "white",
+        borderRadius: "12px",
+        padding: "30px",
+        width: "500px",
+        maxHeight: "80vh",
+        overflowY: "auto"
+    },
+    modalTitle: {
+        color: "#1e3c72",
+        fontSize: "18px",
+        marginBottom: "4px"
+    },
+    modalMeta: {
+        color: "#888",
+        fontSize: "13px",
+        marginBottom: "20px"
+    },
+    modalFields: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        marginBottom: "24px"
+    },
+    modalField: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px"
+    },
+    modalLabel: {
+        fontSize: "12px",
+        color: "#888"
+    },
+    modalValue: {
+        padding: "8px 12px",
+        borderRadius: "8px",
+        border: "1px solid #ddd",
+        fontSize: "14px",
+        backgroundColor: "#f9f9f9"
+    },
+    modalButtons: {
+        display: "flex",
+        gap: "12px",
+        justifyContent: "flex-end"
+    },
+    restoreConfirmBtn: {
+        padding: "10px 20px",
+        backgroundColor: "#1e3c72",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        fontSize: "14px",
+        cursor: "pointer",
+        fontWeight: "bold"
+    },
+    cancelBtn: {
+        padding: "10px 20px",
+        backgroundColor: "white",
+        color: "#1e3c72",
+        border: "1px solid #1e3c72",
+        borderRadius: "8px",
+        fontSize: "14px",
+        cursor: "pointer"
     }
     
 };

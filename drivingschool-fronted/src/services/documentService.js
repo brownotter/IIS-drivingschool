@@ -156,3 +156,15 @@ export const getDocumentVersions = async (documentId) => {
     if (!response.ok) return [];
     return response.json();
 };
+
+export const restoreDocumentVersion = async (documentId, versionId) => {
+    const response = await fetch(
+        `http://localhost:8080/documents/${documentId}/versions/${versionId}/restore`,
+        {
+            method: "PUT",
+            credentials: "include"
+        }
+    );
+    if (!response.ok) throw new Error("Failed to restore version.");
+    return response.json();
+};

@@ -11,4 +11,5 @@ public class DocsVersionDto {
     private String changedBy;
     private String changeDescription;
     private Long documentId;
+    private String snapshotData;
 }
