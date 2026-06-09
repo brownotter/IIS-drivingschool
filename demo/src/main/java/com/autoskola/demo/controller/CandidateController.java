@@ -105,4 +105,13 @@ public class CandidateController {
                     .body(e.getMessage());
         }
     }
+
+    @GetMapping("/financials")
+    public ResponseEntity<CandidateFinancialsDto>
+    getMyFinancials(HttpSession session) {
+
+        return ResponseEntity.ok(
+                candidateService.getMyFinancials(session)
+        );
+    }
 }

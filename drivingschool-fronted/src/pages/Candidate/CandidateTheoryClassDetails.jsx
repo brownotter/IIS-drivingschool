@@ -41,20 +41,34 @@ function CandidateTheoryClassDetails({ theoryClass, onClose, onRefreshSchedule }
             method: "PUT"
         })
         .then(async (res) => {
-            if (!res.ok) {
-                let errorMessage = "";
-                try {
-                    errorMessage = await res.text();
-                } catch (e) {
-                    errorMessage = "";
-                }
+         if (!res.ok) {
 
-                if (endpoint === "cancel") {
-                    throw new Error("You cannot leave this class because you have already canceled your attendance certain amount of times.");
-                } else {
-                    throw new Error(errorMessage || `Server error: ${res.status}`);
-                }
-            }
+    let errorMessage = "";
+
+    try {
+        const errorText = await res.text();
+
+        try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.message;
+        } catch {
+            errorMessage = errorText;
+        }
+
+    } catch (e) {
+        errorMessage = "";
+    }
+
+    if (endpoint === "cancel") {
+        throw new Error(
+            "You cannot leave this class because you have already canceled your attendance certain amount of times."
+        );
+    } else {
+        throw new Error(
+            errorMessage || `Server error: ${res.status}`
+        );
+    }
+}
             
             setLoading(false);
             if (isEnrolled) {
