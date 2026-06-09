@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { getDocumentDetails, getDocumentValidity } from "../../services/documentService";
+import { getDocumentDetails, getDocumentValidity, getDocumentVersions } from "../../services/documentService";
 
 function DocumentDetailsPage() {
     const navigate = useNavigate();
@@ -12,6 +12,8 @@ function DocumentDetailsPage() {
 
     const [validity, setValidity] = useState(null);
 
+    const [versions, setVersions] = useState([]);
+
     useEffect(() => {
         loadDocument();
     }, []);
@@ -20,12 +22,20 @@ function DocumentDetailsPage() {
         try {
             const data = await getDocumentDetails(id);
             setDoc(data);
+
             try {
             const validityData = await getDocumentValidity(id);
             setValidity(validityData);
-        } catch (err) {
-            //ne postoji validy zapis
-        }
+            } catch (err) {
+                //ne postoji validy zapis
+            }
+            try {
+            const versionsData = await getDocumentVersions(id);
+            setVersions(versionsData);
+            } catch (err) {
+                //ne postiji verzuje
+            }
+
         } catch (err) {
             navigate("/employee/documents");
         } finally {
@@ -275,6 +285,31 @@ function DocumentDetailsPage() {
                         <p style={styles.noAlerts}>No alerts for this document</p>
                     )}
                 </div>
+
+                    <div style={styles.alertsCard}>
+                        <h3 style={styles.alertsTitle}>
+                            Version history
+                        </h3>
+
+                        {versions.length === 0 ? (
+                            <p style={styles.noAlerts}>No version history.</p>
+                        ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "280px", overflowY: "auto", overflowX: "hidden" }}>
+                                {versions.map((v) => (
+                                    <div key={v.versionId} style={styles.versionItem}>
+                                        <div style={styles.versionBadge}>V{v.versionNum}</div>
+                                        <div style={styles.versionInfo}>
+                                            <span style={styles.versionDesc}>{v.changeDescription}</span>
+                                            <span style={styles.versionMeta}>
+                                                {v.changedBy} — {v.changeTime ? v.changeTime.replace("T", " ").substring(0, 16) : "-"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
             </div>
         </div>
     );
@@ -411,6 +446,39 @@ const styles = {
     color: "#888",
     fontSize: "14px",
     padding: "8px 0"
+    },
+    versionItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "10px 14px",
+    borderRadius: "8px",
+    border: "1px solid #eee",
+    backgroundColor: "#fafafa"
+    },
+    versionBadge: {
+        padding: "4px 10px",
+        backgroundColor: "#1e3c72",
+        color: "white",
+        borderRadius: "6px",
+        fontSize: "12px",
+        fontWeight: "bold",
+        minWidth: "36px",
+        textAlign: "center"
+    },
+    versionInfo: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "2px"
+    },
+    versionDesc: {
+        fontSize: "13px",
+        fontWeight: "500",
+        color: "#333"
+    },
+    versionMeta: {
+        fontSize: "12px",
+        color: "#888"
     }
     
 };

@@ -30,4 +30,6 @@ public interface DocumentService {
     String markValidityAsUnread(Long documentId);
     List<DocsAlertDto> getExpiringDocumentsAlert();
     List<DocsAlertDto> getExpiredDocumentsAlert();
+
+    List<DocsVersionDto> getDocumentVersions(Long documentId);
 }

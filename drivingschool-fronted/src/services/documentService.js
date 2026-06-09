@@ -147,3 +147,12 @@ export const getDocumentValidity = async (documentId) => {
     if (!response.ok) return null;
     return response.json();
 };
+
+export const getDocumentVersions = async (documentId) => {
+    const response = await fetch(
+        `http://localhost:8080/documents/${documentId}/versions`,
+        { credentials: "include" }
+    );
+    if (!response.ok) return [];
+    return response.json();
+};

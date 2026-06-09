@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final ExamResultRepository examResultRepository;
     private final CandidateRepository candidateRepository;
     private final EmployeeRepository employeeRepository;
+    private final DocsVersionRepository docsVersionRepository;
 
     @Override
     public List<DocumentsDto> getAllDocumentsByCandidate(Long candidateId) {
@@ -217,7 +219,19 @@ public class DocumentServiceImpl implements DocumentService {
         exam.setMedResult(dto.getMedResult());
         exam.setMedExamDate(dto.getMedExamDate());
 
-        return mapToDto(medicalExamRepository.save(exam));
+        medicalExamRepository.save(exam);
+
+        DocsVersion version = DocsVersion.builder()
+                .document(exam)
+                .versionNum(exam.getCurrentVersion())
+                .changeTime(LocalDateTime.now())
+                .changedBy(exam.getEmployee())
+                .changeDescription("Document updated")
+                .build();
+
+        docsVersionRepository.save(version);
+
+        return mapToDto(exam);
     }
 
     @Override
@@ -234,7 +248,19 @@ public class DocumentServiceImpl implements DocumentService {
         cert.setCerfDate(dto.getCerfDate());
         cert.setValidDate(dto.getValidDate());
 
-        return mapToDto(certificateRepository.save(cert));
+        certificateRepository.save(cert);
+
+        DocsVersion version = DocsVersion.builder()
+                .document(cert)
+                .versionNum(cert.getCurrentVersion())
+                .changeTime(LocalDateTime.now())
+                .changedBy(cert.getEmployee())
+                .changeDescription("Document updated")
+                .build();
+
+        docsVersionRepository.save(version);
+
+        return mapToDto(cert);
     }
 
     @Override
@@ -251,7 +277,19 @@ public class DocumentServiceImpl implements DocumentService {
         contract.setContStartDate(dto.getContStartDate());
         contract.setAmmountCont(dto.getAmmountCont());
 
-        return mapToDto(contractRepository.save(contract));
+        contractRepository.save(contract);
+
+        DocsVersion version = DocsVersion.builder()
+                .document(contract)
+                .versionNum(contract.getCurrentVersion())
+                .changeTime(LocalDateTime.now())
+                .changedBy(contract.getEmployee())
+                .changeDescription("Document updated")
+                .build();
+
+        docsVersionRepository.save(version);
+
+        return mapToDto(contract);
     }
 
     @Override
@@ -399,6 +437,26 @@ public class DocumentServiceImpl implements DocumentService {
                         dto.setIsRead(v.getIsRead());
                     });
 
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DocsVersionDto> getDocumentVersions(Long documentId) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        return docsVersionRepository.findByDocumentOrderByVersionNumDesc(doc)
+                .stream()
+                .map(v -> {
+                    DocsVersionDto dto = new DocsVersionDto();
+                    dto.setVersionId(v.getVersionId());
+                    dto.setVersionNum(v.getVersionNum());
+                    dto.setChangeTime(v.getChangeTime());
+                    dto.setChangedBy(v.getChangedBy().getFirstName() + " " + v.getChangedBy().getLastName());
+                    dto.setChangeDescription(v.getChangeDescription());
+                    dto.setDocumentId(documentId);
                     return dto;
                 })
                 .collect(Collectors.toList());
