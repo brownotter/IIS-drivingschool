@@ -351,7 +351,7 @@ function DocumentDetailsPage() {
                             </div>
                         )}
 
-                        {previewVersion && previewVersion.snapshotData && (
+                        {previewVersion && (
                             <div style={styles.modalOverlay}>
                                 <div style={styles.modal}>
                                     <h3 style={styles.modalTitle}>
@@ -361,19 +361,25 @@ function DocumentDetailsPage() {
                                         {previewVersion.changedBy} — {previewVersion.changeTime?.replace("T", " ").substring(0, 16)}
                                     </p>
 
-                                    <div style={styles.modalFields}>
-                                        {Object.entries(JSON.parse(previewVersion.snapshotData))
-                                            .filter(([key]) => !hiddenFields.includes(key))
-                                            .map(([key, value]) => (
-                                                <div key={key} style={styles.modalField}>
-                                                    <label style={styles.modalLabel}>
-                                                        {fieldLabels[key] || key}
-                                                    </label>
-                                                    <div style={styles.modalValue}>{value?.toString() || "-"}</div>
-                                                </div>
-                                            ))
-                                        }
-                                    </div>
+                                    {previewVersion.snapshotData ? (
+                                        <div style={styles.modalFields}>
+                                            {Object.entries(JSON.parse(previewVersion.snapshotData))
+                                                .filter(([key]) => !hiddenFields.includes(key))
+                                                .map(([key, value]) => (
+                                                    <div key={key} style={styles.modalField}>
+                                                        <label style={styles.modalLabel}>
+                                                            {fieldLabels[key] || key}
+                                                        </label>
+                                                        <div style={styles.modalValue}>{value?.toString() || "-"}</div>
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                    ) : (
+                                        <p style={{ color: "#888", marginBottom: "24px" }}>
+                                            No preview available for this version.
+                                        </p>
+                                    )}
 
                                     <div style={styles.modalButtons}>
                                         <button
