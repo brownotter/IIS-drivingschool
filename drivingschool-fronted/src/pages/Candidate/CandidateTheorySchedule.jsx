@@ -86,9 +86,9 @@ function CandidateTheorySchedule() {
         <div style={styles.container}>
             <Sidebar
                 buttons={[
-                    { label: "My Profile", onClick: () => navigate("/candidate/profile") },
-                    { label: "Schedule", onClick: () => navigate("/candidate/schedule") },
+                    { label: "My Profile", onClick: () => navigate("/candidate") },//umesto candidate/profile
                     { label: "Financials", onClick: () => navigate("/candidate/financials") },
+                    { label: "Schedule", onClick: () => navigate("/candidate/theory-schedule") }, //umesto samo schedule
                     { label: "Notifications", onClick: () => navigate("/candidate/notifications") },
                     { label: "Theory simulation", onClick: () => navigate("/candidate/simulation") },
                     { label: "Theory exam", onClick: () => navigate("/candidate/exam") },

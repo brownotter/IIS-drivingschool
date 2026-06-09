@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -301,5 +302,94 @@ public class CandidateServiceImpl implements CandidateService {
         paymentRepository.save(payment);
 
         return "Payment added successfully!";
+    }
+
+    @Override
+    public CandidateFinancialsDto getMyFinancials(
+            HttpSession session
+    ) {
+
+        User sessionUser =
+                (User) session.getAttribute("user");
+
+        Candidate candidate =
+                candidateRepository
+                        .findById(sessionUser.getId())
+                        .orElseThrow();
+
+        List<Payment> payments =
+                paymentRepository
+                        .findByCandidateId(candidate.getId());
+
+        double totalPaid =
+                payments.stream()
+                        .mapToDouble(Payment::getAmount)
+                        .sum();
+
+        double totalPrice =
+                candidate
+                        .getCategoryPackage()
+                        .getPrice();
+
+        double remainingAmount =
+                totalPrice - totalPaid;
+
+        boolean fullyPaid =
+                remainingAmount <= 0;
+
+        List<PaymentHistoryDto> paymentDtos =
+                payments.stream()
+                        .map(payment ->
+                                PaymentHistoryDto.builder()
+                                        .amount(payment.getAmount())
+                                        .paymentDate(payment.getPaymentDate())
+                                        .method(payment.getMethod())
+                                        .build()
+                        )
+                        .toList();
+
+        LocalDate nextPaymentDate = null;
+
+        if (!payments.isEmpty() && !fullyPaid) {
+
+            Payment lastPayment =
+                    payments.stream()
+                            .max(
+                                    Comparator.comparing(
+                                            Payment::getPaymentDate
+                                    )
+                            )
+                            .orElseThrow();
+
+            nextPaymentDate =
+                    lastPayment
+                            .getPaymentDate()
+                            .plusMonths(1);
+        }
+
+        double nextPaymentAmount = 0;
+
+        if (!fullyPaid) {
+
+            nextPaymentAmount =
+                    remainingAmount < 10000
+                            ? remainingAmount
+                            : 10000;
+        }
+
+        return CandidateFinancialsDto.builder()
+                .category(
+                        candidate
+                                .getCategoryPackage()
+                                .getCategory()
+                )
+                .totalPrice(totalPrice)
+                .totalPaid(totalPaid)
+                .remainingAmount(remainingAmount)
+                .payments(paymentDtos)
+                .nextPaymentDate(nextPaymentDate)
+                .nextPaymentAmount(nextPaymentAmount)
+                .fullyPaid(fullyPaid)
+                .build();
     }
 }

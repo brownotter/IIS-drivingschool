@@ -10,6 +10,7 @@ public interface CandidateService {
 
     CandidateProfileDto getProfile(HttpSession session);
     CandidateDetailsDto getCandidateById(Long id);
+    CandidateFinancialsDto getMyFinancials(HttpSession session);
 
     String updateProfile(
             UpdateCandidateDto dto,

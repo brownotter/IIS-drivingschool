@@ -97,3 +97,40 @@ export const getAllCandidates = async () => {
 
     return response.json();
 };
+
+export const getMyNotifications = async () => {
+
+    const response = await fetch(
+        "http://localhost:8080/notifications/my",
+        {
+            credentials: "include"
+        }
+    );
+
+    return await response.json();
+};
+
+export const markNotificationAsRead = async (id) => {
+
+    const response = await fetch(
+        `http://localhost:8080/notifications/${id}/read`,
+        {
+            method: "PUT",
+            credentials: "include"
+        }
+    );
+
+    return await response.text();
+};
+
+export const getCandidateFinancials = async () => {
+
+    const response = await fetch(
+        "http://localhost:8080/candidate/financials",
+        {
+            credentials: "include"
+        }
+    );
+
+    return await response.json();
+};

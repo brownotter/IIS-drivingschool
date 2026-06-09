@@ -3,6 +3,7 @@ package com.autoskola.demo.service.impl;
 import com.autoskola.demo.dto.*;
 import com.autoskola.demo.model.*;
 import com.autoskola.demo.repository.*;
+import com.autoskola.demo.service.NotificationService;
 import com.autoskola.demo.service.TheoryClassService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class TheoryClassServiceImpl implements TheoryClassService {
     private final ProfessorAvailabilityRepository availabilityRepository;
     private final UserRepository userRepository;
     private final DomainRepository domainRepository;
+    private final NotificationService notificationService;
 
     @Override
     public void createTheoryClass(CreateTheoryClassDto dto) {
@@ -80,6 +82,16 @@ public class TheoryClassServiceImpl implements TheoryClassService {
             Candidate candidate = candidateRepository.findById(candidateId)
                     .orElseThrow(() -> new RuntimeException("Candidate not found"));
 
+            boolean alreadyExists =
+                    attendanceRepository.existsByCandidateAndTheoryClass(
+                            candidate,
+                            savedClass
+                    );
+
+            if (alreadyExists) {
+                continue;
+            }
+
             TheoryClassAttendance attendance = new TheoryClassAttendance();
 
             attendance.setCandidate(candidate);
@@ -88,6 +100,15 @@ public class TheoryClassServiceImpl implements TheoryClassService {
             attendance.setStatus(TheoryClassAttendanceStatus.ENROLLED);
 
             attendanceRepository.save(attendance);
+
+            notificationService.createNotification(
+                    candidate,
+                    "Theory class scheduled",
+                    "You have been enrolled in a theory class on "
+                            + savedClass.getTheoryDate()
+                            + " at "
+                            + savedClass.getTheoryStartTime()
+            );
 
             savedClass.getAttendances().add(attendance);
 
@@ -342,8 +363,31 @@ public class TheoryClassServiceImpl implements TheoryClassService {
             TheoryClassAttendance attendance = attendanceRepository.findById(record.getAttendanceId())
                     .orElseThrow(() -> new RuntimeException("Attendance record not found for ID: " + record.getAttendanceId()));
 
-            TheoryClassAttendanceStatus newStatus = TheoryClassAttendanceStatus.valueOf(record.getStatus().toUpperCase());
+            TheoryClassAttendanceStatus oldStatus =
+                    attendance.getStatus();
+
+            TheoryClassAttendanceStatus newStatus =
+                    TheoryClassAttendanceStatus.valueOf(
+                            record.getStatus().toUpperCase()
+                    );
+
             attendance.setStatus(newStatus);
+
+            if (
+                    oldStatus != TheoryClassAttendanceStatus.ATTENDED
+                            &&
+                            newStatus == TheoryClassAttendanceStatus.ATTENDED
+            ) {
+
+                Candidate candidate =
+                        attendance.getCandidate();
+
+                candidate.setTheoryClassesCount(
+                        candidate.getTheoryClassesCount() + 1
+                );
+
+                candidateRepository.save(candidate);
+            }
 
             attendanceRepository.save(attendance);
         }
@@ -390,6 +434,20 @@ public class TheoryClassServiceImpl implements TheoryClassService {
         theoryClassRepository.save(theoryClass);
     }
 
+    private void sendTheoryEnrollmentNotification(
+            Candidate candidate,
+            TheoryClass theoryClass
+    ) {
+        notificationService.createNotification(
+                candidate,
+                "Theory class enrollment",
+                "You have successfully enrolled in a theory class on "
+                        + theoryClass.getTheoryDate()
+                        + " at "
+                        + theoryClass.getTheoryStartTime()
+        );
+    }
+
     @Override
     public void enrollCandidate(
             Long candidateId,
@@ -408,7 +466,7 @@ public class TheoryClassServiceImpl implements TheoryClassService {
             throw new RuntimeException("Class is full");
         }
 
-        boolean alreadyExists = attendanceRepository
+       /* boolean alreadyExists = attendanceRepository
                         .existsByCandidateAndTheoryClassAndStatus(
                                 candidate,
                                 theoryClass,
@@ -417,6 +475,45 @@ public class TheoryClassServiceImpl implements TheoryClassService {
 
         if (alreadyExists) {
             throw new RuntimeException("Candidate already enrolled");
+        }*/
+//provera da ne moze 2 put da prisustvuje istom casu
+        TheoryClassAttendance existingAttendance =
+                attendanceRepository
+                        .findByCandidateAndTheoryClass(
+                                candidate,
+                                theoryClass
+                        )
+                        .orElse(null);
+
+        if (existingAttendance != null) {
+
+            if (existingAttendance.getStatus()
+                    == TheoryClassAttendanceStatus.CANCELLED) {
+
+                existingAttendance.setStatus(
+                        TheoryClassAttendanceStatus.ENROLLED
+                );
+
+                attendanceRepository.save(existingAttendance);
+
+                Integer enrolledCount =
+                        attendanceRepository
+                                .countByTheoryClassAndStatus(
+                                        theoryClass,
+                                        TheoryClassAttendanceStatus.ENROLLED
+                                );
+
+                theoryClass.setCurrentEnrolled(enrolledCount);
+
+                theoryClassRepository.save(theoryClass);
+                sendTheoryEnrollmentNotification(candidate, theoryClass);
+
+                return;
+            }
+
+            throw new RuntimeException(
+                    "Candidate already has attendance record for this class"
+            );
         }
 
         TheoryClassAttendance attendance = new TheoryClassAttendance();
@@ -429,6 +526,7 @@ public class TheoryClassServiceImpl implements TheoryClassService {
         );
 
         attendanceRepository.save(attendance);
+        sendTheoryEnrollmentNotification(candidate, theoryClass);
 
         Integer enrolledCount = attendanceRepository
                 .countByTheoryClassAndStatus(

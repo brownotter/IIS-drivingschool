@@ -29,5 +29,10 @@ public interface TheoryClassAttendanceRepository extends JpaRepository<TheoryCla
             TheoryClassAttendanceStatus status
     );
 
+    boolean existsByCandidateAndTheoryClass(
+            Candidate candidate,
+            TheoryClass theoryClass
+    );
+
     Integer countByTheoryClassAndStatus(TheoryClass theoryClass, TheoryClassAttendanceStatus theoryClassAttendanceStatus);
 }

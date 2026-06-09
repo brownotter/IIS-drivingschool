@@ -119,6 +119,11 @@ const logout = async () => {
         },
 
         {
+            label: "Financials",
+            onClick: () => navigate("/candidate/financials")
+        },
+
+        {
             label: "Schedule",
             onClick: () => 
                 navigate("/candidate/theory-schedule")
@@ -126,7 +131,7 @@ const logout = async () => {
 
         {
             label: "Notifications",
-            onClick: () => {}
+            onClick: () => navigate("/candidate/notifications")
         },
 
         {
