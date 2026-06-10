@@ -145,4 +145,20 @@ public class DocumentController {
     public ResponseEntity<String> markAsUnread(@PathVariable Long documentId) {
         return ResponseEntity.ok(documentService.markValidityAsUnread(documentId));
     }
+
+    @GetMapping("/{documentId}/versions")
+    public ResponseEntity<List<DocsVersionDto>> getDocumentVersions(
+            @PathVariable Long documentId
+    ) {
+        return ResponseEntity.ok(documentService.getDocumentVersions(documentId));
+    }
+
+    @PutMapping("/{documentId}/versions/{versionId}/restore")
+    public ResponseEntity<DocumentsDto> restoreVersion(
+            @PathVariable Long documentId,
+            @PathVariable Long versionId
+    ) {
+        return ResponseEntity.ok(documentService.restoreVersion(documentId, versionId));
+    }
+
 }

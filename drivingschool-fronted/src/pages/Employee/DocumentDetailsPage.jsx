@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { getDocumentDetails, getDocumentValidity } from "../../services/documentService";
+import { getDocumentDetails, getDocumentValidity, getDocumentVersions, restoreDocumentVersion } from "../../services/documentService";
 
 function DocumentDetailsPage() {
     const navigate = useNavigate();
@@ -12,6 +12,9 @@ function DocumentDetailsPage() {
 
     const [validity, setValidity] = useState(null);
 
+    const [versions, setVersions] = useState([]);
+    const [previewVersion, setPreviewVersion] = useState(null);
+
     useEffect(() => {
         loadDocument();
     }, []);
@@ -20,18 +23,61 @@ function DocumentDetailsPage() {
         try {
             const data = await getDocumentDetails(id);
             setDoc(data);
+
             try {
             const validityData = await getDocumentValidity(id);
             setValidity(validityData);
-        } catch (err) {
-            //ne postoji validy zapis
-        }
+            } catch (err) {
+                //ne postoji validy zapis
+            }
+            try {
+            const versionsData = await getDocumentVersions(id);
+            setVersions(versionsData);
+            } catch (err) {
+                //ne postiji verzuje
+            }
+
         } catch (err) {
             navigate("/employee/documents");
         } finally {
             setLoading(false);
         }
     };
+
+    const handleRestore = async (versionId) => {
+    if (!window.confirm("Are you sure you want to restore this version?")) return;
+    try {
+        await restoreDocumentVersion(id, versionId);
+        loadDocument();
+    } catch (err) {
+        console.error(err);
+    }
+    };
+
+    const fieldLabels = {
+    docsTitle: "Document name",
+    docsStatus: "Status",
+    docsExpireDate: "Expiry date",
+    docsCreateDate: "Created date",
+    docsModfDate: "Last modified",
+    currentVersion: "Version",
+    institution: "Institution",
+    doctorName: "Doctor",
+    medResult: "Result",
+    medExamDate: "Exam date",
+    contNumb: "Contract number",
+    contStartDate: "Start date",
+    ammountCont: "Amount",
+    cerfNumb: "Certificate number",
+    cerfDate: "Certificate date",
+    validDate: "Valid date",
+    examType: "Exam type",
+    examRefNum: "Reference number",
+    examScore: "Score",
+    issueDate: "Issue date"
+    };
+
+    const hiddenFields = ["documentsId", "documentType"];
 
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
@@ -275,6 +321,88 @@ function DocumentDetailsPage() {
                         <p style={styles.noAlerts}>No alerts for this document</p>
                     )}
                 </div>
+
+                    <div style={styles.alertsCard}>
+                        <h3 style={styles.alertsTitle}>
+                            Version history
+                        </h3>
+
+                        {versions.length === 0 ? (
+                            <p style={styles.noAlerts}>No version history.</p>
+                        ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "280px", overflowY: "auto", overflowX: "hidden" }}>
+                                {versions.map((v) => (
+                                    <div key={v.versionId} style={styles.versionItem}>
+                                        <div style={styles.versionBadge}>V{v.versionNum}</div>
+                                        <div style={styles.versionInfo}>
+                                            <span style={styles.versionDesc}>{v.changeDescription}</span>
+                                            <span style={styles.versionMeta}>
+                                                {v.changedBy} — {v.changeTime ? v.changeTime.replace("T", " ").substring(0, 16) : "-"}
+                                            </span>
+                                        </div>
+                                        <button
+                                            style={styles.restoreBtn}
+                                            onClick={() => setPreviewVersion(v)}
+                                        >
+                                            Preview & Restore
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {previewVersion && (
+                            <div style={styles.modalOverlay}>
+                                <div style={styles.modal}>
+                                    <h3 style={styles.modalTitle}>
+                                        Preview — V{previewVersion.versionNum}
+                                    </h3>
+                                    <p style={styles.modalMeta}>
+                                        {previewVersion.changedBy} — {previewVersion.changeTime?.replace("T", " ").substring(0, 16)}
+                                    </p>
+
+                                    {previewVersion.snapshotData ? (
+                                        <div style={styles.modalFields}>
+                                            {Object.entries(JSON.parse(previewVersion.snapshotData))
+                                                .filter(([key]) => !hiddenFields.includes(key))
+                                                .map(([key, value]) => (
+                                                    <div key={key} style={styles.modalField}>
+                                                        <label style={styles.modalLabel}>
+                                                            {fieldLabels[key] || key}
+                                                        </label>
+                                                        <div style={styles.modalValue}>{value?.toString() || "-"}</div>
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                    ) : (
+                                        <p style={{ color: "#888", marginBottom: "24px" }}>
+                                            No preview available for this version.
+                                        </p>
+                                    )}
+
+                                    <div style={styles.modalButtons}>
+                                        <button
+                                            style={styles.restoreConfirmBtn}
+                                            onClick={() => {
+                                                handleRestore(previewVersion.versionId);
+                                                setPreviewVersion(null);
+                                            }}
+                                        >
+                                            Restore this version
+                                        </button>
+                                        <button
+                                            style={styles.cancelBtn}
+                                            onClick={() => setPreviewVersion(null)}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
             </div>
         </div>
     );
@@ -411,6 +539,125 @@ const styles = {
     color: "#888",
     fontSize: "14px",
     padding: "8px 0"
+    },
+    versionItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "10px 14px",
+    borderRadius: "8px",
+    border: "1px solid #eee",
+    backgroundColor: "#fafafa"
+    },
+    versionBadge: {
+        padding: "4px 10px",
+        backgroundColor: "#1e3c72",
+        color: "white",
+        borderRadius: "6px",
+        fontSize: "12px",
+        fontWeight: "bold",
+        minWidth: "36px",
+        textAlign: "center"
+    },
+    versionInfo: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "2px"
+    },
+    versionDesc: {
+        fontSize: "13px",
+        fontWeight: "500",
+        color: "#333"
+    },
+    versionMeta: {
+        fontSize: "12px",
+        color: "#888"
+    },
+    restoreBtn: {
+    marginLeft: "auto",
+    padding: "4px 12px",
+    backgroundColor: "white",
+    color: "#1e3c72",
+    border: "1px solid #1e3c72",
+    borderRadius: "6px",
+    fontSize: "12px",
+    cursor: "pointer"
+    },
+    modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000
+    },
+    modal: {
+        backgroundColor: "white",
+        borderRadius: "12px",
+        padding: "30px",
+        width: "500px",
+        maxHeight: "80vh",
+        overflowY: "auto"
+    },
+    modalTitle: {
+        color: "#1e3c72",
+        fontSize: "18px",
+        marginBottom: "4px"
+    },
+    modalMeta: {
+        color: "#888",
+        fontSize: "13px",
+        marginBottom: "20px"
+    },
+    modalFields: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px",
+        marginBottom: "24px"
+    },
+    modalField: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px"
+    },
+    modalLabel: {
+        fontSize: "12px",
+        color: "#888"
+    },
+    modalValue: {
+        padding: "8px 12px",
+        borderRadius: "8px",
+        border: "1px solid #ddd",
+        fontSize: "14px",
+        backgroundColor: "#f9f9f9"
+    },
+    modalButtons: {
+        display: "flex",
+        gap: "12px",
+        justifyContent: "flex-end"
+    },
+    restoreConfirmBtn: {
+        padding: "10px 20px",
+        backgroundColor: "#1e3c72",
+        color: "white",
+        border: "none",
+        borderRadius: "8px",
+        fontSize: "14px",
+        cursor: "pointer",
+        fontWeight: "bold"
+    },
+    cancelBtn: {
+        padding: "10px 20px",
+        backgroundColor: "white",
+        color: "#1e3c72",
+        border: "1px solid #1e3c72",
+        borderRadius: "8px",
+        fontSize: "14px",
+        cursor: "pointer"
     }
     
 };

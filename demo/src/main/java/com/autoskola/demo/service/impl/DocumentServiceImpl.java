@@ -7,11 +7,13 @@ import com.autoskola.demo.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,9 @@ public class DocumentServiceImpl implements DocumentService {
     private final ExamResultRepository examResultRepository;
     private final CandidateRepository candidateRepository;
     private final EmployeeRepository employeeRepository;
+    private final DocsVersionRepository docsVersionRepository;
+
+    private final ObjectMapper objectMapper;
 
     @Override
     public List<DocumentsDto> getAllDocumentsByCandidate(Long candidateId) {
@@ -207,6 +212,25 @@ public class DocumentServiceImpl implements DocumentService {
         MedicalExam exam = medicalExamRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Medical exam not found with id: " + documentId));
 
+        String snapshot = null;
+        try {
+            MedicalExamDetailsDto snapshotDto = new MedicalExamDetailsDto();
+            snapshotDto.setDocumentsId(exam.getDocumentsId());
+            snapshotDto.setDocsTitle(exam.getDocsTitle());
+            snapshotDto.setDocsCreateDate(exam.getDocsCreateDate());
+            snapshotDto.setDocsExpireDate(exam.getDocsExpireDate());
+            snapshotDto.setDocsStatus(exam.getDocsStatus());
+            snapshotDto.setCurrentVersion(exam.getCurrentVersion());
+            snapshotDto.setDocsModfDate(exam.getDocsModfDate());
+            snapshotDto.setInstitution(exam.getInstitution());
+            snapshotDto.setDoctorName(exam.getDoctorName());
+            snapshotDto.setMedResult(exam.getMedResult());
+            snapshotDto.setMedExamDate(exam.getMedExamDate());
+            snapshot = objectMapper.writeValueAsString(snapshotDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         exam.setDocsTitle(dto.getDocsTitle());
         exam.setDocsExpireDate(dto.getDocsExpireDate());
         exam.setDocsStatus(dto.getDocsStatus());
@@ -217,7 +241,22 @@ public class DocumentServiceImpl implements DocumentService {
         exam.setMedResult(dto.getMedResult());
         exam.setMedExamDate(dto.getMedExamDate());
 
-        return mapToDto(medicalExamRepository.save(exam));
+        medicalExamRepository.save(exam);
+
+        int nextVersionNum = docsVersionRepository.findByDocumentOrderByChangeTimeDesc(exam).size() + 1;
+
+        DocsVersion version = DocsVersion.builder()
+                .document(exam)
+                .versionNum(nextVersionNum)
+                .changeTime(LocalDateTime.now())
+                .changedBy(exam.getEmployee())
+                .changeDescription("Document updated")
+                .snapshotData(snapshot)
+                .build();
+
+        docsVersionRepository.save(version);
+
+        return mapToDto(exam);
     }
 
     @Override
@@ -225,6 +264,24 @@ public class DocumentServiceImpl implements DocumentService {
         Certificate cert = certificateRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Certificate not found with id: " + documentId));
 
+        String snapshot = null;
+        try {
+            CertificateDetailsDto snapshotDto = new CertificateDetailsDto();
+            snapshotDto.setDocumentsId(cert.getDocumentsId());
+            snapshotDto.setDocsTitle(cert.getDocsTitle());
+            snapshotDto.setDocsCreateDate(cert.getDocsCreateDate());
+            snapshotDto.setDocsExpireDate(cert.getDocsExpireDate());
+            snapshotDto.setDocsStatus(cert.getDocsStatus());
+            snapshotDto.setCurrentVersion(cert.getCurrentVersion());
+            snapshotDto.setDocsModfDate(cert.getDocsModfDate());
+            snapshotDto.setCerfNumb(cert.getCerfNumb());
+            snapshotDto.setCerfDate(cert.getCerfDate());
+            snapshotDto.setValidDate(cert.getValidDate());
+            snapshot = objectMapper.writeValueAsString(snapshotDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
         cert.setDocsTitle(dto.getDocsTitle());
         cert.setDocsExpireDate(dto.getDocsExpireDate());
         cert.setDocsStatus(dto.getDocsStatus());
@@ -234,13 +291,46 @@ public class DocumentServiceImpl implements DocumentService {
         cert.setCerfDate(dto.getCerfDate());
         cert.setValidDate(dto.getValidDate());
 
-        return mapToDto(certificateRepository.save(cert));
+        certificateRepository.save(cert);
+
+        int nextVersionNum = docsVersionRepository.findByDocumentOrderByChangeTimeDesc(cert).size() + 1;
+
+        DocsVersion version = DocsVersion.builder()
+                .document(cert)
+                .versionNum(nextVersionNum)
+                .changeTime(LocalDateTime.now())
+                .changedBy(cert.getEmployee())
+                .changeDescription("Document updated")
+                .snapshotData(snapshot)
+                .build();
+
+        docsVersionRepository.save(version);
+
+        return mapToDto(cert);
     }
 
     @Override
     public DocumentsDto updateContract(Long documentId, ContractDto dto) {
         Contract contract = contractRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Contract not found with id: " + documentId));
+
+        String snapshot = null;
+        try {
+            ContractDetailsDto snapshotDto = new ContractDetailsDto();
+            snapshotDto.setDocumentsId(contract.getDocumentsId());
+            snapshotDto.setDocsTitle(contract.getDocsTitle());
+            snapshotDto.setDocsCreateDate(contract.getDocsCreateDate());
+            snapshotDto.setDocsExpireDate(contract.getDocsExpireDate());
+            snapshotDto.setDocsStatus(contract.getDocsStatus());
+            snapshotDto.setCurrentVersion(contract.getCurrentVersion());
+            snapshotDto.setDocsModfDate(contract.getDocsModfDate());
+            snapshotDto.setContNumb(contract.getContNumb());
+            snapshotDto.setContStartDate(contract.getContStartDate());
+            snapshotDto.setAmmountCont(contract.getAmmountCont());
+            snapshot = objectMapper.writeValueAsString(snapshotDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         contract.setDocsTitle(dto.getDocsTitle());
         contract.setDocsExpireDate(dto.getDocsExpireDate());
@@ -251,13 +341,47 @@ public class DocumentServiceImpl implements DocumentService {
         contract.setContStartDate(dto.getContStartDate());
         contract.setAmmountCont(dto.getAmmountCont());
 
-        return mapToDto(contractRepository.save(contract));
+        contractRepository.save(contract);
+
+        int nextVersionNum = docsVersionRepository.findByDocumentOrderByChangeTimeDesc(contract).size() + 1;
+
+        DocsVersion version = DocsVersion.builder()
+                .document(contract)
+                .versionNum(nextVersionNum)
+                .changeTime(LocalDateTime.now())
+                .changedBy(contract.getEmployee())
+                .changeDescription("Document updated")
+                .snapshotData(snapshot)
+                .build();
+
+        docsVersionRepository.save(version);
+
+        return mapToDto(contract);
     }
 
     @Override
     public DocumentsDto updateExamResult(Long documentId, ExamResultDto dto) {
         ExamResult result = examResultRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Exam result not found with id: " + documentId));
+
+        String snapshot = null;
+        try {
+            ExamResultDetailsDto snapshotDto = new ExamResultDetailsDto();
+            snapshotDto.setDocumentsId(result.getDocumentsId());
+            snapshotDto.setDocsTitle(result.getDocsTitle());
+            snapshotDto.setDocsCreateDate(result.getDocsCreateDate());
+            snapshotDto.setDocsExpireDate(result.getDocsExpireDate());
+            snapshotDto.setDocsStatus(result.getDocsStatus());
+            snapshotDto.setCurrentVersion(result.getCurrentVersion());
+            snapshotDto.setDocsModfDate(result.getDocsModfDate());
+            snapshotDto.setIssueDate(result.getIssueDate());
+            snapshotDto.setExamType(result.getExamType());
+            snapshotDto.setExamRefNum(result.getExamRefNum());
+            snapshotDto.setExamScore(result.getExamScore());
+            snapshot = objectMapper.writeValueAsString(snapshotDto);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         result.setDocsTitle(dto.getDocsTitle());
         result.setDocsExpireDate(dto.getDocsExpireDate());
@@ -269,7 +393,22 @@ public class DocumentServiceImpl implements DocumentService {
         result.setExamRefNum(dto.getExamRefNum());
         result.setExamScore(dto.getExamScore());
 
-        return mapToDto(examResultRepository.save(result));
+        examResultRepository.save(result);
+
+        int nextVersionNum = docsVersionRepository.findByDocumentOrderByChangeTimeDesc(result).size() + 1;
+
+        DocsVersion version = DocsVersion.builder()
+                .document(result)
+                .versionNum(nextVersionNum)
+                .changeTime(LocalDateTime.now())
+                .changedBy(result.getEmployee())
+                .changeDescription("Document updated")
+                .snapshotData(snapshot)
+                .build();
+
+        docsVersionRepository.save(version);
+
+        return mapToDto(result);
     }
 
     private DocumentsDto mapToDto(Documents doc) {
@@ -402,6 +541,150 @@ public class DocumentServiceImpl implements DocumentService {
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DocsVersionDto> getDocumentVersions(Long documentId) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        return docsVersionRepository.findByDocumentOrderByChangeTimeDesc(doc)
+                .stream()
+                .map(v -> {
+                    DocsVersionDto dto = new DocsVersionDto();
+                    dto.setVersionId(v.getVersionId());
+                    dto.setVersionNum(v.getVersionNum());
+                    dto.setChangeTime(v.getChangeTime());
+                    dto.setChangedBy(v.getChangedBy().getFirstName() + " " + v.getChangedBy().getLastName());
+                    dto.setChangeDescription(v.getChangeDescription());
+                    dto.setDocumentId(documentId);
+                    dto.setSnapshotData(v.getSnapshotData());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public DocumentsDto restoreVersion(Long documentId, Long versionId) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        DocsVersion version = docsVersionRepository.findById(versionId)
+                .orElseThrow(() -> new RuntimeException("Version not found."));
+
+        try {
+            if (doc instanceof MedicalExam exam) {
+                MedicalExamDetailsDto snapshot = objectMapper.readValue(
+                        version.getSnapshotData(), MedicalExamDetailsDto.class
+                );
+                exam.setDocsTitle(snapshot.getDocsTitle());
+                exam.setDocsExpireDate(snapshot.getDocsExpireDate());
+                exam.setDocsStatus(snapshot.getDocsStatus());
+                exam.setDocsModfDate(LocalDate.now());
+                exam.setInstitution(snapshot.getInstitution());
+                exam.setDoctorName(snapshot.getDoctorName());
+                exam.setMedResult(snapshot.getMedResult());
+                exam.setMedExamDate(snapshot.getMedExamDate());
+                medicalExamRepository.save(exam);
+
+                int nextVersionNum = docsVersionRepository.findByDocumentOrderByChangeTimeDesc(exam).size() + 1;
+
+                DocsVersion newVersion = DocsVersion.builder()
+                        .document(exam)
+                        .versionNum(nextVersionNum)
+                        .changeTime(LocalDateTime.now())
+                        .changedBy(exam.getEmployee())
+                        .changeDescription("Restored to V" + version.getVersionNum())
+                        .build();
+                docsVersionRepository.save(newVersion);
+
+                return mapToDto(exam);
+
+            } else if (doc instanceof Contract contract) {
+                ContractDetailsDto snapshot = objectMapper.readValue(
+                        version.getSnapshotData(), ContractDetailsDto.class
+                );
+                contract.setDocsTitle(snapshot.getDocsTitle());
+                contract.setDocsExpireDate(snapshot.getDocsExpireDate());
+                contract.setDocsStatus(snapshot.getDocsStatus());
+                contract.setDocsModfDate(LocalDate.now());
+                contract.setContNumb(snapshot.getContNumb());
+                contract.setContStartDate(snapshot.getContStartDate());
+                contract.setAmmountCont(snapshot.getAmmountCont());
+                contractRepository.save(contract);
+
+                int nextVersionNum = docsVersionRepository.findByDocumentOrderByChangeTimeDesc(contract).size() + 1;
+
+                DocsVersion newVersion = DocsVersion.builder()
+                        .document(contract)
+                        .versionNum(nextVersionNum)
+                        .changeTime(LocalDateTime.now())
+                        .changedBy(contract.getEmployee())
+                        .changeDescription("Restored to V" + version.getVersionNum())
+                        .build();
+                docsVersionRepository.save(newVersion);
+
+                return mapToDto(contract);
+
+            } else if (doc instanceof Certificate cert) {
+                CertificateDetailsDto snapshot = objectMapper.readValue(
+                        version.getSnapshotData(), CertificateDetailsDto.class
+                );
+                cert.setDocsTitle(snapshot.getDocsTitle());
+                cert.setDocsExpireDate(snapshot.getDocsExpireDate());
+                cert.setDocsStatus(snapshot.getDocsStatus());
+                cert.setDocsModfDate(LocalDate.now());
+                cert.setCerfNumb(snapshot.getCerfNumb());
+                cert.setCerfDate(snapshot.getCerfDate());
+                cert.setValidDate(snapshot.getValidDate());
+                certificateRepository.save(cert);
+
+                int nextVersionNum = docsVersionRepository.findByDocumentOrderByChangeTimeDesc(cert).size() + 1;
+
+                DocsVersion newVersion = DocsVersion.builder()
+                        .document(cert)
+                        .versionNum(nextVersionNum)
+                        .changeTime(LocalDateTime.now())
+                        .changedBy(cert.getEmployee())
+                        .changeDescription("Restored to V" + version.getVersionNum())
+                        .build();
+                docsVersionRepository.save(newVersion);
+
+                return mapToDto(cert);
+
+            } else if (doc instanceof ExamResult result) {
+                ExamResultDetailsDto snapshot = objectMapper.readValue(
+                        version.getSnapshotData(), ExamResultDetailsDto.class
+                );
+                result.setDocsTitle(snapshot.getDocsTitle());
+                result.setDocsExpireDate(snapshot.getDocsExpireDate());
+                result.setDocsStatus(snapshot.getDocsStatus());
+                result.setDocsModfDate(LocalDate.now());
+                result.setIssueDate(snapshot.getIssueDate());
+                result.setExamType(snapshot.getExamType());
+                result.setExamRefNum(snapshot.getExamRefNum());
+                result.setExamScore(snapshot.getExamScore());
+                examResultRepository.save(result);
+
+                int nextVersionNum = docsVersionRepository.findByDocumentOrderByChangeTimeDesc(result).size() + 1;
+
+                DocsVersion newVersion = DocsVersion.builder()
+                        .document(result)
+                        .versionNum(nextVersionNum)
+                        .changeTime(LocalDateTime.now())
+                        .changedBy(result.getEmployee())
+                        .changeDescription("Restored to V" + version.getVersionNum())
+                        .build();
+                docsVersionRepository.save(newVersion);
+
+                return mapToDto(result);
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to restore version: " + e.getMessage());
+        }
+
+        throw new RuntimeException("Unknown document type.");
     }
 
     private Candidate getCandidateOrThrow(Long id) {
