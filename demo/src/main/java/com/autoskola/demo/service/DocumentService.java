@@ -33,4 +33,8 @@ public interface DocumentService {
 
     List<DocsVersionDto> getDocumentVersions(Long documentId);
     DocumentsDto restoreVersion(Long documentId, Long versionId);
+
+    ArchiveDto archiveDocument(Long documentId, String comment);
+    List<ArchiveDto> getAllArchivedDocuments();
+    ArchiveDto unarchiveDocument(Long documentId);
 }

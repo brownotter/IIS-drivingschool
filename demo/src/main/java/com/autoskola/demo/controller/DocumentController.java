@@ -161,4 +161,24 @@ public class DocumentController {
         return ResponseEntity.ok(documentService.restoreVersion(documentId, versionId));
     }
 
+    @PutMapping("/{documentId}/archive")
+    public ResponseEntity<ArchiveDto> archiveDocument(
+            @PathVariable Long documentId,
+            @RequestParam(required = false) String comment
+    ) {
+        return ResponseEntity.ok(documentService.archiveDocument(documentId, comment));
+    }
+
+    @GetMapping("/archived")
+    public ResponseEntity<List<ArchiveDto>> getAllArchivedDocuments() {
+        return ResponseEntity.ok(documentService.getAllArchivedDocuments());
+    }
+
+    @PutMapping("/{documentId}/unarchive")
+    public ResponseEntity<ArchiveDto> unarchiveDocument(
+            @PathVariable Long documentId
+    ) {
+        return ResponseEntity.ok(documentService.unarchiveDocument(documentId));
+    }
+
 }

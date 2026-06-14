@@ -27,6 +27,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final CandidateRepository candidateRepository;
     private final EmployeeRepository employeeRepository;
     private final DocsVersionRepository docsVersionRepository;
+    private final ArchiveRepository archiveRepository;
 
     private final ObjectMapper objectMapper;
 
@@ -34,6 +35,7 @@ public class DocumentServiceImpl implements DocumentService {
     public List<DocumentsDto> getAllDocumentsByCandidate(Long candidateId) {
         return documentsRepository.findByCandidateId(candidateId)
                 .stream()
+                .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -136,6 +138,7 @@ public class DocumentServiceImpl implements DocumentService {
     public List<DocumentsDto> getAllDocuments() {
         return documentsRepository.findAll()
                 .stream()
+                .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -685,6 +688,65 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         throw new RuntimeException("Unknown document type.");
+    }
+
+
+    @Override
+    public ArchiveDto archiveDocument(Long documentId, String comment) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        doc.setDocsStatus(DocumentStatus.ARCHIVED);
+        documentsRepository.save(doc);
+
+        Archive archive = Archive.builder()
+                .document(doc)
+                .archiveDate(LocalDate.now())
+                .archComment(comment)
+                .build();
+
+        archiveRepository.save(archive);
+
+        return mapToArchiveDto(archive);
+    }
+
+    @Override
+    public List<ArchiveDto> getAllArchivedDocuments() {
+        return archiveRepository.findAllByOrderByArchiveDateDesc()
+                .stream()
+                .map(this::mapToArchiveDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ArchiveDto unarchiveDocument(Long documentId) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        Archive archive = archiveRepository.findByDocument(doc)
+                .orElseThrow(() -> new RuntimeException("Archive record not found."));
+
+        doc.setDocsStatus(DocumentStatus.ACTIVE);
+        documentsRepository.save(doc);
+
+        archiveRepository.delete(archive);
+
+        return mapToArchiveDto(archive);
+    }
+
+    private ArchiveDto mapToArchiveDto(Archive archive) {
+        ArchiveDto dto = new ArchiveDto();
+        dto.setArchiveId(archive.getArchiveId());
+        dto.setArchiveDate(archive.getArchiveDate());
+        dto.setArchComment(archive.getArchComment());
+        dto.setDocumentId(archive.getDocument().getDocumentsId());
+        dto.setDocumentTitle(archive.getDocument().getDocsTitle());
+        dto.setDocumentType(archive.getDocument().getClass().getSimpleName().toUpperCase());
+        dto.setCandidateName(
+                archive.getDocument().getCandidate().getFirstName() + " " +
+                        archive.getDocument().getCandidate().getLastName()
+        );
+        return dto;
     }
 
     private Candidate getCandidateOrThrow(Long id) {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { getDocumentDetails, getDocumentValidity, getDocumentVersions, restoreDocumentVersion } from "../../services/documentService";
+import { getDocumentDetails, getDocumentValidity, getDocumentVersions, restoreDocumentVersion, archiveDocument } from "../../services/documentService";
 
 function DocumentDetailsPage() {
     const navigate = useNavigate();
@@ -14,6 +14,9 @@ function DocumentDetailsPage() {
 
     const [versions, setVersions] = useState([]);
     const [previewVersion, setPreviewVersion] = useState(null);
+
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [archiveComment, setArchiveComment] = useState("");
 
     useEffect(() => {
         loadDocument();
@@ -78,6 +81,16 @@ function DocumentDetailsPage() {
     };
 
     const hiddenFields = ["documentsId", "documentType"];
+
+    const handleArchive = async () => {
+    try {
+        await archiveDocument(id, archiveComment);
+        setShowArchiveModal(false);
+        loadDocument();
+    } catch (err) {
+        console.error(err);
+    }
+    };
 
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
@@ -282,7 +295,13 @@ function DocumentDetailsPage() {
 
                     <div style={styles.actions}>
                         <button style={styles.actionBtn}>Download</button>
-                        <button style={styles.actionBtn}>Archive</button>
+                        <button
+                            style={styles.actionBtn}
+                            onClick={() => setShowArchiveModal(true)}
+                            disabled={doc.docsStatus === "ARCHIVED"}
+                        >
+                            Archive
+                        </button>
                         <button
                             style={styles.actionBtn}
                             onClick={() => navigate(`/employee/documents/${id}/edit`)}
@@ -401,6 +420,35 @@ function DocumentDetailsPage() {
                                 </div>
                             </div>
                         )}
+
+                        {showArchiveModal && (
+                            <div style={styles.modalOverlay}>
+                                <div style={styles.modal}>
+                                    <h3 style={styles.modalTitle}>Archive document</h3>
+                                    <p style={{ color: "#888", marginBottom: "16px", fontSize: "14px" }}>
+                                        Are you sure you want to archive this document?
+                                    </p>
+                                    <div style={styles.fieldGroup}>
+                                        <label style={styles.label}>Comment (optional)</label>
+                                        <input
+                                            style={styles.fieldBox}
+                                            value={archiveComment}
+                                            onChange={(e) => setArchiveComment(e.target.value)}
+                                            placeholder="Reason for archiving..."
+                                        />
+                                    </div>
+                                    <div style={styles.modalButtons}>
+                                        <button style={styles.restoreConfirmBtn} onClick={handleArchive}>
+                                            Confirm
+                                        </button>
+                                        <button style={styles.cancelBtn} onClick={() => setShowArchiveModal(false)}>
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
 
             </div>

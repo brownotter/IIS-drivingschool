@@ -63,7 +63,6 @@ function DocumentsPage() {
             case "ACTIVE": return { label: "Active", color: "#155724", bg: "#d4edda" };
             case "EXPIRED": return { label: "Expired", color: "#721c24", bg: "#f8d7da" };
             case "EXPIRING_SOON": return { label: "Expiring soon", color: "#856404", bg: "#fff3cd" };
-            case "ARCHIVED": return { label: "Archived", color: "#383d41", bg: "#e2e3e5" };
             default: return { label: status, color: "#333", bg: "#eee" };
         }
     };
@@ -124,7 +123,6 @@ function DocumentsPage() {
                         <option value="ACTIVE">Active</option>
                         <option value="EXPIRED">Expired</option>
                         <option value="EXPIRING_SOON">Expiring soon</option>
-                        <option value="ARCHIVED">Archived</option>
                     </select>
 
                     <button style={styles.resetBtn} onClick={handleReset}>
