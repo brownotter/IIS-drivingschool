@@ -88,9 +88,6 @@ function AlertsPage() {
                     <span style={{ ...styles.dot, backgroundColor: dotColor }}></span>
                     <h2 style={styles.sectionTitle}>
                         {title} ({docs.length})
-                        {unread.length > 0 && title !== "Expired" && (
-                            <span style={styles.unreadBadge}>{unread.length} new</span>
-                        )}
                     </h2>
                 </div>
 

@@ -79,9 +79,6 @@ function EmployeeHome() {
                     <div style={styles.alertsHeader}>
                         <h2 style={styles.alertsTitle}>
                             Active alerts
-                            {allAlerts.length > 0 && (
-                                <span style={styles.alertsBadge}>{allAlerts.length}</span>
-                            )}
                         </h2>
                         <button
                             style={styles.viewAllBtn}
@@ -102,8 +99,6 @@ function EmployeeHome() {
                                         ...styles.alertItem,
                                         backgroundColor: hoveredAlert === doc.documentsId ? "#f0f4ff" : "#fafafa",
                                         borderColor: hoveredAlert === doc.documentsId ? "#1e3c72" : "#eee",
-                                        transform: hoveredAlert === doc.documentsId ? "translateX(4px)" : "none",
-                                        transition: "all 0.15s ease"
                                     }}
                                     onClick={() => navigate(`/employee/documents/${doc.documentsId}`)}
                                     onMouseEnter={() => setHoveredAlert(doc.documentsId)}

@@ -92,6 +92,24 @@ function DocumentDetailsPage() {
     }
     };
 
+    const handleDownload = async () => {
+    try {
+        const response = await fetch(
+            `http://localhost:8080/documents/${id}/pdf`,
+            { credentials: "include" }
+        );
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `document_${id}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error(err);
+    }
+    };
+
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
             method: "GET",
@@ -294,7 +312,9 @@ function DocumentDetailsPage() {
 
 
                     <div style={styles.actions}>
-                        <button style={styles.actionBtn}>Download</button>
+                        <button style={styles.actionBtn} onClick={handleDownload}>
+                            Download
+                        </button>
                         <button
                             style={styles.actionBtn}
                             onClick={() => setShowArchiveModal(true)}

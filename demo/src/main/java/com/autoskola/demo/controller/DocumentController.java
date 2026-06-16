@@ -3,8 +3,11 @@ package com.autoskola.demo.controller;
 import com.autoskola.demo.dto.*;
 import com.autoskola.demo.model.DocumentStatus;
 import com.autoskola.demo.service.DocumentService;
+import com.autoskola.demo.service.impl.PdfGeneratorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -15,6 +18,7 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final PdfGeneratorService pdfGeneratorService;
 
     @GetMapping("/candidate/{candidateId}")
     public ResponseEntity<List<DocumentsDto>> getAllByCandidate(
@@ -179,6 +183,19 @@ public class DocumentController {
             @PathVariable Long documentId
     ) {
         return ResponseEntity.ok(documentService.unarchiveDocument(documentId));
+    }
+
+    @GetMapping("/{documentId}/pdf")
+    public ResponseEntity<byte[]> generatePdf(@PathVariable Long documentId) {
+        byte[] pdf = pdfGeneratorService.generatePdf(documentId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "document_" + documentId + ".pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdf);
     }
 
 }
