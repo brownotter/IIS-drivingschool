@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Table(name = "instructors")
 @Entity
 @Getter
@@ -36,4 +39,7 @@ public class Instructor extends User{
 
     @Column
     private double averageStrictness;
+
+    @OneToMany(mappedBy = "instructor", fetch = FetchType.LAZY)
+    private Set<Candidate> candidates = new HashSet<>();
 }

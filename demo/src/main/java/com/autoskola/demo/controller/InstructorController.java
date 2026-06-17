@@ -1,10 +1,9 @@
 package com.autoskola.demo.controller;
 
-import com.autoskola.demo.dto.InstructorCreateDto;
-import com.autoskola.demo.dto.InstructorProfileDto;
-import com.autoskola.demo.dto.InstructorUpdateDto;
+import com.autoskola.demo.dto.*;
 import com.autoskola.demo.exception.AccessDeniedException;
 import com.autoskola.demo.model.User;
+import com.autoskola.demo.service.CandidateService;
 import com.autoskola.demo.service.InstructorService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -21,6 +20,7 @@ import java.util.List;
 public class InstructorController {
 
     private final InstructorService instructorService;
+    private final CandidateService candidateService;
 
     private void checkAdminAccess(HttpSession session) {
 
@@ -74,6 +74,19 @@ public class InstructorController {
     public ResponseEntity<InstructorProfileDto> deleteInstructor(@PathVariable Long id, HttpSession session) {
         checkAdminAccess(session);
         return ResponseEntity.ok(instructorService.deleteInstructor(id));
+    }
+
+    @GetMapping("/candidates")
+    public ResponseEntity<List<CandidateCardDto>> getMyCandidates(HttpSession session) {
+        checkInstructorAccess(session);
+        User loggedUser = (User) session.getAttribute("user");
+        return ResponseEntity.ok(candidateService.getCandidateCardsByInstructor(loggedUser.getId()));
+    }
+
+    @GetMapping("/candidates/{id}")
+    public ResponseEntity<CandidateLogSummaryDto> getCandidateLogSummary(@PathVariable Long id, HttpSession session) {
+        checkInstructorAccess(session);
+        return ResponseEntity.ok(instructorService.getCandidateLogSummary(id));
     }
 }
 

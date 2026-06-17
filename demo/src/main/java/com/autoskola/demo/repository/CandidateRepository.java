@@ -23,4 +23,6 @@ public interface CandidateRepository
             Category category,
             CandidateStatus status
     );
+
+    List<Candidate> findByInstructorId(Long instructorId);
 }
