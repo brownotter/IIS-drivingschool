@@ -14,32 +14,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProfessorAvailabilityController {
 
-    private final ProfessorAvailabilityService
-            availabilityService;
+    private final ProfessorAvailabilityService availabilityService;
 
     @PostMapping
-    public ProfessorAvailability createAvailability(
-            @RequestBody ProfessorAvailabilityDto dto
+    public ProfessorAvailability createAvailability(@RequestBody ProfessorAvailabilityDto dto
     ) {
-
-        return availabilityService
-                .createAvailability(dto);
+        return availabilityService.createAvailability(dto);
     }
 
     @GetMapping("/professor/{professorId}")
-    public List<ProfessorAvailability>
-    getProfessorAvailabilities(
-            @PathVariable Long professorId
+    public List<ProfessorAvailability> getProfessorAvailabilities(@PathVariable Long professorId
     ) {
-
-        return availabilityService
-                .getProfessorAvailabilities(professorId);
+        return availabilityService.getProfessorAvailabilities(professorId);
     }
 
-    @GetMapping("/next-week")
-    public List<LocalDate> getNextWeekDates() {
-
-        return availabilityService
-                .getNextWeekDates();
+    @GetMapping("/next-week") public List<LocalDate> getNextWeekDates() {
+        return availabilityService.getNextWeekDates();
     }
 }

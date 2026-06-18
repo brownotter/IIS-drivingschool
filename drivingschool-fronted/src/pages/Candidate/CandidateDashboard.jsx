@@ -14,7 +14,7 @@ function CandidateDashboard() {
     const [profile, setProfile] = useState(null);
 
     const [editMode, setEditMode] = useState(false);
-
+ 
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -136,12 +136,12 @@ const logout = async () => {
 
         {
             label: "Theory Simulation",
-            onClick: () => {}
+            onClick: () => navigate("/candidate/theory-simulation")
         },
 
         {
             label: "Theory Exam",
-            onClick: () => {}
+            onClick: () => navigate("/candidate/theory-exam")
         },
 
         {

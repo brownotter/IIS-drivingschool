@@ -64,11 +64,11 @@ function CandidateNotifications() {
                     },
                     {
                         label: "Theory Simulation",
-                        onClick: () => {}
+                        onClick: () => navigate("/candidate/theory-simulation")
                     },
                     {
                         label: "Theory Exam",
-                        onClick: () => {}
+                        onClick: () => navigate("/candidate/theory-exam")
                     },
                     {
                         label: "Reports",
