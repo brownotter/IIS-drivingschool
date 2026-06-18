@@ -2,8 +2,10 @@ package com.autoskola.demo.controller;
 
 import com.autoskola.demo.dto.*;
 import com.autoskola.demo.model.DocumentStatus;
+import com.autoskola.demo.model.User;
 import com.autoskola.demo.service.DocumentService;
 import com.autoskola.demo.service.impl.PdfGeneratorService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -85,33 +87,41 @@ public class DocumentController {
     @PutMapping("/{documentId}/medical-exam")
     public ResponseEntity<DocumentsDto> updateMedicalExam(
             @PathVariable Long documentId,
-            @Valid @RequestBody MedicalExamDto dto
+            @Valid @RequestBody MedicalExamDto dto,
+            HttpSession session
     ) {
-        return ResponseEntity.ok(documentService.updateMedicalExam(documentId, dto));
+        User user = (User) session.getAttribute("user");
+        return ResponseEntity.ok(documentService.updateMedicalExam(documentId, dto, user.getId()));
     }
 
     @PutMapping("/{documentId}/certificate")
     public ResponseEntity<DocumentsDto> updateCertificate(
             @PathVariable Long documentId,
-            @Valid @RequestBody CertificateDto dto
+            @Valid @RequestBody CertificateDto dto,
+            HttpSession session
     ) {
-        return ResponseEntity.ok(documentService.updateCertificate(documentId, dto));
+        User user = (User) session.getAttribute("user");
+        return ResponseEntity.ok(documentService.updateCertificate(documentId, dto, user.getId()));
     }
 
     @PutMapping("/{documentId}/contract")
     public ResponseEntity<DocumentsDto> updateContract(
             @PathVariable Long documentId,
-            @Valid @RequestBody ContractDto dto
+            @Valid @RequestBody ContractDto dto,
+            HttpSession session
     ) {
-        return ResponseEntity.ok(documentService.updateContract(documentId, dto));
+        User user = (User) session.getAttribute("user");
+        return ResponseEntity.ok(documentService.updateContract(documentId, dto, user.getId()));
     }
 
     @PutMapping("/{documentId}/exam-result")
     public ResponseEntity<DocumentsDto> updateExamResult(
             @PathVariable Long documentId,
-            @Valid @RequestBody ExamResultDto dto
+            @Valid @RequestBody ExamResultDto dto,
+            HttpSession session
     ) {
-        return ResponseEntity.ok(documentService.updateExamResult(documentId, dto));
+        User user = (User) session.getAttribute("user");
+        return ResponseEntity.ok(documentService.updateExamResult(documentId, dto, user.getId()));
     }
 
     @GetMapping("/search")
@@ -160,9 +170,11 @@ public class DocumentController {
     @PutMapping("/{documentId}/versions/{versionId}/restore")
     public ResponseEntity<DocumentsDto> restoreVersion(
             @PathVariable Long documentId,
-            @PathVariable Long versionId
+            @PathVariable Long versionId,
+            HttpSession session
     ) {
-        return ResponseEntity.ok(documentService.restoreVersion(documentId, versionId));
+        User user = (User) session.getAttribute("user");
+        return ResponseEntity.ok(documentService.restoreVersion(documentId, versionId,user.getId()));
     }
 
     @PutMapping("/{documentId}/archive")

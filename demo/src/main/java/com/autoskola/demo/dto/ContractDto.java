@@ -16,4 +16,5 @@ public class ContractDto {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate contStartDate;
     private BigDecimal ammountCont;
+    private String changeDescription;
 }

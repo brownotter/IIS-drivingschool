@@ -211,9 +211,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto updateMedicalExam(Long documentId, MedicalExamDto dto) {
+    public DocumentsDto updateMedicalExam(Long documentId, MedicalExamDto dto, Long employeeId) {
         MedicalExam exam = medicalExamRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Medical exam not found with id: " + documentId));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         String snapshot = null;
         try {
@@ -252,8 +254,10 @@ public class DocumentServiceImpl implements DocumentService {
                 .document(exam)
                 .versionNum(nextVersionNum)
                 .changeTime(LocalDateTime.now())
-                .changedBy(exam.getEmployee())
-                .changeDescription("Document updated")
+                .changedBy(employee)
+                .changeDescription(dto.getChangeDescription() != null && !dto.getChangeDescription().isBlank()
+                        ? dto.getChangeDescription()
+                        : "Document updated")
                 .snapshotData(snapshot)
                 .build();
 
@@ -263,9 +267,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto updateCertificate(Long documentId, CertificateDto dto) {
+    public DocumentsDto updateCertificate(Long documentId, CertificateDto dto, Long employeeId) {
         Certificate cert = certificateRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Certificate not found with id: " + documentId));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         String snapshot = null;
         try {
@@ -302,8 +308,10 @@ public class DocumentServiceImpl implements DocumentService {
                 .document(cert)
                 .versionNum(nextVersionNum)
                 .changeTime(LocalDateTime.now())
-                .changedBy(cert.getEmployee())
-                .changeDescription("Document updated")
+                .changedBy(employee)
+                .changeDescription(dto.getChangeDescription() != null && !dto.getChangeDescription().isBlank()
+                        ? dto.getChangeDescription()
+                        : "Document updated")
                 .snapshotData(snapshot)
                 .build();
 
@@ -313,9 +321,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto updateContract(Long documentId, ContractDto dto) {
+    public DocumentsDto updateContract(Long documentId, ContractDto dto,Long employeeId) {
         Contract contract = contractRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Contract not found with id: " + documentId));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         String snapshot = null;
         try {
@@ -352,8 +362,10 @@ public class DocumentServiceImpl implements DocumentService {
                 .document(contract)
                 .versionNum(nextVersionNum)
                 .changeTime(LocalDateTime.now())
-                .changedBy(contract.getEmployee())
-                .changeDescription("Document updated")
+                .changedBy(employee)
+                .changeDescription(dto.getChangeDescription() != null && !dto.getChangeDescription().isBlank()
+                        ? dto.getChangeDescription()
+                        : "Document updated")
                 .snapshotData(snapshot)
                 .build();
 
@@ -363,9 +375,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto updateExamResult(Long documentId, ExamResultDto dto) {
+    public DocumentsDto updateExamResult(Long documentId, ExamResultDto dto,Long employeeId) {
         ExamResult result = examResultRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Exam result not found with id: " + documentId));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         String snapshot = null;
         try {
@@ -404,8 +418,10 @@ public class DocumentServiceImpl implements DocumentService {
                 .document(result)
                 .versionNum(nextVersionNum)
                 .changeTime(LocalDateTime.now())
-                .changedBy(result.getEmployee())
-                .changeDescription("Document updated")
+                .changedBy(employee)
+                .changeDescription(dto.getChangeDescription() != null && !dto.getChangeDescription().isBlank()
+                        ? dto.getChangeDescription()
+                        : "Document updated")
                 .snapshotData(snapshot)
                 .build();
 
@@ -568,12 +584,14 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto restoreVersion(Long documentId, Long versionId) {
+    public DocumentsDto restoreVersion(Long documentId, Long versionId, Long employeeId) {
         Documents doc = documentsRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Document not found."));
 
         DocsVersion version = docsVersionRepository.findById(versionId)
                 .orElseThrow(() -> new RuntimeException("Version not found."));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         try {
             if (doc instanceof MedicalExam exam) {
@@ -596,7 +614,7 @@ public class DocumentServiceImpl implements DocumentService {
                         .document(exam)
                         .versionNum(nextVersionNum)
                         .changeTime(LocalDateTime.now())
-                        .changedBy(exam.getEmployee())
+                        .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
                         .build();
                 docsVersionRepository.save(newVersion);
@@ -622,7 +640,7 @@ public class DocumentServiceImpl implements DocumentService {
                         .document(contract)
                         .versionNum(nextVersionNum)
                         .changeTime(LocalDateTime.now())
-                        .changedBy(contract.getEmployee())
+                        .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
                         .build();
                 docsVersionRepository.save(newVersion);
@@ -648,7 +666,7 @@ public class DocumentServiceImpl implements DocumentService {
                         .document(cert)
                         .versionNum(nextVersionNum)
                         .changeTime(LocalDateTime.now())
-                        .changedBy(cert.getEmployee())
+                        .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
                         .build();
                 docsVersionRepository.save(newVersion);
@@ -675,7 +693,7 @@ public class DocumentServiceImpl implements DocumentService {
                         .document(result)
                         .versionNum(nextVersionNum)
                         .changeTime(LocalDateTime.now())
-                        .changedBy(result.getEmployee())
+                        .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
                         .build();
                 docsVersionRepository.save(newVersion);
