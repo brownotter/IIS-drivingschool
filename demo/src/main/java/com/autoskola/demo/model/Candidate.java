@@ -12,7 +12,6 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @SuperBuilder
 public class Candidate extends User{
    @ManyToOne
@@ -43,5 +42,9 @@ public class Candidate extends User{
     private Integer theoryScore;
 
     private Integer drivingScore;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "instructor_id")
+    private Instructor instructor;
 
 }

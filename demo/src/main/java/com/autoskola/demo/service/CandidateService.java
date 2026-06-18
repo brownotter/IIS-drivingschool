@@ -28,4 +28,6 @@ public interface CandidateService {
     );
 
     String addPayment(Long candidateId, AddPaymentDto dto);
+
+    List<CandidateCardDto> getCandidateCardsByInstructor(Long instructorId);
 }

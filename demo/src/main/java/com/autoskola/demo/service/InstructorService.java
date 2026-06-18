@@ -1,5 +1,6 @@
 package com.autoskola.demo.service;
 
+import com.autoskola.demo.dto.CandidateLogSummaryDto;
 import com.autoskola.demo.dto.InstructorCreateDto;
 import com.autoskola.demo.dto.InstructorProfileDto;
 import com.autoskola.demo.dto.InstructorUpdateDto;
@@ -15,4 +16,5 @@ public interface InstructorService {
     InstructorProfileDto createInstructor(InstructorCreateDto dto);
     InstructorProfileDto updateInstructor(Long id, InstructorUpdateDto dto);
     InstructorProfileDto deleteInstructor(Long id);
+    CandidateLogSummaryDto getCandidateLogSummary(Long candidateId);
 }
