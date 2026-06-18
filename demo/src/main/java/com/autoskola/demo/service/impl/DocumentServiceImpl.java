@@ -602,6 +602,26 @@ public class DocumentServiceImpl implements DocumentService {
                 MedicalExamDetailsDto snapshot = objectMapper.readValue(
                         version.getSnapshotData(), MedicalExamDetailsDto.class
                 );
+
+                String currentSnapshot = null;
+                try {
+                    MedicalExamDetailsDto currentSnapshotDto = new MedicalExamDetailsDto();
+                    currentSnapshotDto.setDocumentsId(exam.getDocumentsId());
+                    currentSnapshotDto.setDocsTitle(exam.getDocsTitle());
+                    currentSnapshotDto.setDocsCreateDate(exam.getDocsCreateDate());
+                    currentSnapshotDto.setDocsExpireDate(exam.getDocsExpireDate());
+                    currentSnapshotDto.setDocsStatus(exam.getDocsStatus());
+                    currentSnapshotDto.setCurrentVersion(exam.getCurrentVersion());
+                    currentSnapshotDto.setDocsModfDate(exam.getDocsModfDate());
+                    currentSnapshotDto.setInstitution(exam.getInstitution());
+                    currentSnapshotDto.setDoctorName(exam.getDoctorName());
+                    currentSnapshotDto.setMedResult(exam.getMedResult());
+                    currentSnapshotDto.setMedExamDate(exam.getMedExamDate());
+                    currentSnapshot = objectMapper.writeValueAsString(currentSnapshotDto);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 exam.setDocsTitle(snapshot.getDocsTitle());
                 exam.setDocsExpireDate(snapshot.getDocsExpireDate());
                 exam.setDocsStatus(snapshot.getDocsStatus());
@@ -620,6 +640,7 @@ public class DocumentServiceImpl implements DocumentService {
                         .changeTime(LocalDateTime.now())
                         .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
+                        .snapshotData(currentSnapshot)
                         .build();
                 docsVersionRepository.save(newVersion);
 
@@ -629,6 +650,25 @@ public class DocumentServiceImpl implements DocumentService {
                 ContractDetailsDto snapshot = objectMapper.readValue(
                         version.getSnapshotData(), ContractDetailsDto.class
                 );
+
+                String currentSnapshot = null;
+                try {
+                    ContractDetailsDto currentSnapshotDto = new ContractDetailsDto();
+                    currentSnapshotDto.setDocumentsId(contract.getDocumentsId());
+                    currentSnapshotDto.setDocsTitle(contract.getDocsTitle());
+                    currentSnapshotDto.setDocsCreateDate(contract.getDocsCreateDate());
+                    currentSnapshotDto.setDocsExpireDate(contract.getDocsExpireDate());
+                    currentSnapshotDto.setCurrentVersion(contract.getCurrentVersion());
+                    currentSnapshotDto.setDocsModfDate(contract.getDocsModfDate());
+                    currentSnapshotDto.setContNumb(contract.getContNumb());
+                    currentSnapshotDto.setContStartDate(contract.getContStartDate());
+                    currentSnapshotDto.setAmmountCont(contract.getAmmountCont());
+                    currentSnapshot = objectMapper.writeValueAsString(currentSnapshotDto);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
                 contract.setDocsTitle(snapshot.getDocsTitle());
                 contract.setDocsExpireDate(snapshot.getDocsExpireDate());
                 contract.setDocsStatus(snapshot.getDocsStatus());
@@ -646,6 +686,7 @@ public class DocumentServiceImpl implements DocumentService {
                         .changeTime(LocalDateTime.now())
                         .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
+                        .snapshotData(currentSnapshot)
                         .build();
                 docsVersionRepository.save(newVersion);
 
@@ -655,6 +696,25 @@ public class DocumentServiceImpl implements DocumentService {
                 CertificateDetailsDto snapshot = objectMapper.readValue(
                         version.getSnapshotData(), CertificateDetailsDto.class
                 );
+
+                String currentSnapshot = null;
+                try {
+                    CertificateDetailsDto currentSnapshotDto = new CertificateDetailsDto();
+                    currentSnapshotDto.setDocumentsId(cert.getDocumentsId());
+                    currentSnapshotDto.setDocsTitle(cert.getDocsTitle());
+                    currentSnapshotDto.setDocsCreateDate(cert.getDocsCreateDate());
+                    currentSnapshotDto.setDocsExpireDate(cert.getDocsExpireDate());
+                    currentSnapshotDto.setDocsStatus(cert.getDocsStatus());
+                    currentSnapshotDto.setCurrentVersion(cert.getCurrentVersion());
+                    currentSnapshotDto.setDocsModfDate(cert.getDocsModfDate());
+                    currentSnapshotDto.setCerfNumb(cert.getCerfNumb());
+                    currentSnapshotDto.setCerfDate(cert.getCerfDate());
+                    currentSnapshotDto.setDocsExpireDate(cert.getDocsExpireDate());
+                    currentSnapshot = objectMapper.writeValueAsString(currentSnapshotDto);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 cert.setDocsTitle(snapshot.getDocsTitle());
                 cert.setDocsExpireDate(snapshot.getDocsExpireDate());
                 cert.setDocsStatus(snapshot.getDocsStatus());
@@ -672,6 +732,7 @@ public class DocumentServiceImpl implements DocumentService {
                         .changeTime(LocalDateTime.now())
                         .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
+                        .snapshotData(currentSnapshot)
                         .build();
                 docsVersionRepository.save(newVersion);
 
@@ -681,6 +742,25 @@ public class DocumentServiceImpl implements DocumentService {
                 ExamResultDetailsDto snapshot = objectMapper.readValue(
                         version.getSnapshotData(), ExamResultDetailsDto.class
                 );
+
+                String currentSnapshot = null;
+                try {
+                    ExamResultDetailsDto currentSnapshotDto = new ExamResultDetailsDto();
+                    currentSnapshotDto.setDocumentsId(result.getDocumentsId());
+                    currentSnapshotDto.setDocsTitle(result.getDocsTitle());
+                    currentSnapshotDto.setDocsCreateDate(result.getDocsCreateDate());
+                    currentSnapshotDto.setDocsExpireDate(result.getDocsExpireDate());
+                    currentSnapshotDto.setDocsStatus(result.getDocsStatus());
+                    currentSnapshotDto.setCurrentVersion(result.getCurrentVersion());
+                    currentSnapshotDto.setDocsModfDate(result.getDocsModfDate());
+                    currentSnapshotDto.setExamType(result.getExamType());
+                    currentSnapshotDto.setExamRefNum(result.getExamRefNum());
+                    currentSnapshotDto.setExamScore(result.getExamScore());
+                    currentSnapshot = objectMapper.writeValueAsString(currentSnapshotDto);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 result.setDocsTitle(snapshot.getDocsTitle());
                 result.setDocsExpireDate(snapshot.getDocsExpireDate());
                 result.setDocsStatus(snapshot.getDocsStatus());
@@ -699,6 +779,7 @@ public class DocumentServiceImpl implements DocumentService {
                         .changeTime(LocalDateTime.now())
                         .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
+                        .snapshotData(currentSnapshot)
                         .build();
                 docsVersionRepository.save(newVersion);
 
