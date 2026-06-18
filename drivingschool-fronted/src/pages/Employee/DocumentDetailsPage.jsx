@@ -260,6 +260,8 @@ function DocumentDetailsPage() {
                 </div>
 
                 <h1 style={styles.docTitle}>{doc.docsTitle}</h1>
+                
+                <p style={styles.candidateName}>{doc.candidateName}</p>
 
                 <div style={styles.card}>
 
@@ -512,6 +514,12 @@ const styles = {
         fontSize: "26px",
         marginBottom: "24px",
         textAlign: "center"
+    },
+    candidateName: {
+    textAlign: "center",
+    fontSize: "16px",
+    color: "#888",
+    marginBottom: "24px"
     },
     card: {
         backgroundColor: "white",

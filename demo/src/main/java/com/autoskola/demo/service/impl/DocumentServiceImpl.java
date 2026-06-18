@@ -161,6 +161,7 @@ public class DocumentServiceImpl implements DocumentService {
             dto.setDoctorName(exam.getDoctorName());
             dto.setMedResult(exam.getMedResult());
             dto.setMedExamDate(exam.getMedExamDate());
+            dto.setCandidateName(exam.getCandidate().getFirstName() + " " + exam.getCandidate().getLastName());
             return dto;
 
         } else if (doc instanceof Certificate cert) {
@@ -175,6 +176,7 @@ public class DocumentServiceImpl implements DocumentService {
             dto.setCerfNumb(cert.getCerfNumb());
             dto.setCerfDate(cert.getCerfDate());
             dto.setValidDate(cert.getValidDate());
+            dto.setCandidateName(cert.getCandidate().getFirstName() + " " + cert.getCandidate().getLastName());
             return dto;
 
         } else if (doc instanceof Contract contract) {
@@ -189,6 +191,7 @@ public class DocumentServiceImpl implements DocumentService {
             dto.setContNumb(contract.getContNumb());
             dto.setContStartDate(contract.getContStartDate());
             dto.setAmmountCont(contract.getAmmountCont());
+            dto.setCandidateName(contract.getCandidate().getFirstName() + " " + contract.getCandidate().getLastName());
             return dto;
 
         } else if (doc instanceof ExamResult result) {
@@ -204,6 +207,7 @@ public class DocumentServiceImpl implements DocumentService {
             dto.setExamType(result.getExamType());
             dto.setExamRefNum(result.getExamRefNum());
             dto.setExamScore(result.getExamScore());
+            dto.setCandidateName(result.getCandidate().getFirstName() + " " + result.getCandidate().getLastName());
             return dto;
         }
 

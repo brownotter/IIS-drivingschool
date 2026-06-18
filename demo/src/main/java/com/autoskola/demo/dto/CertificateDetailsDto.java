@@ -17,4 +17,5 @@ public class CertificateDetailsDto {
     private LocalDate cerfDate;
     private LocalDate validDate;
     private String documentType = "CERTIFICATE";
+    private String candidateName;
 }
