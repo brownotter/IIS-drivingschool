@@ -23,6 +23,12 @@ function EmployeeHome() {
         }
     };
 
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+    };
+
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
             method: "GET",
@@ -79,9 +85,6 @@ function EmployeeHome() {
                     <div style={styles.alertsHeader}>
                         <h2 style={styles.alertsTitle}>
                             Active alerts
-                            {allAlerts.length > 0 && (
-                                <span style={styles.alertsBadge}>{allAlerts.length}</span>
-                            )}
                         </h2>
                         <button
                             style={styles.viewAllBtn}
@@ -102,8 +105,6 @@ function EmployeeHome() {
                                         ...styles.alertItem,
                                         backgroundColor: hoveredAlert === doc.documentsId ? "#f0f4ff" : "#fafafa",
                                         borderColor: hoveredAlert === doc.documentsId ? "#1e3c72" : "#eee",
-                                        transform: hoveredAlert === doc.documentsId ? "translateX(4px)" : "none",
-                                        transition: "all 0.15s ease"
                                     }}
                                     onClick={() => navigate(`/employee/documents/${doc.documentsId}`)}
                                     onMouseEnter={() => setHoveredAlert(doc.documentsId)}
@@ -115,7 +116,7 @@ function EmployeeHome() {
                                         </span>
                                         <span style={styles.alertDate}>
                                             {doc.docsExpireDate
-                                                ? `Expires ${doc.docsExpireDate}`
+                                                ? `Expires ${formatDate(doc.docsExpireDate)}`
                                                 : "No expiry date"
                                             }
                                         </span>

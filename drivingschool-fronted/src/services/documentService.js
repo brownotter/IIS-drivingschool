@@ -168,3 +168,37 @@ export const restoreDocumentVersion = async (documentId, versionId) => {
     if (!response.ok) throw new Error("Failed to restore version.");
     return response.json();
 };
+
+export const archiveDocument = async (documentId, comment) => {
+    const params = comment ? `?comment=${encodeURIComponent(comment)}` : "";
+    const response = await fetch(
+        `http://localhost:8080/documents/${documentId}/archive${params}`,
+        {
+            method: "PUT",
+            credentials: "include"
+        }
+    );
+    if (!response.ok) throw new Error("Failed to archive document.");
+    return response.json();
+};
+
+export const getAllArchivedDocuments = async () => {
+    const response = await fetch(
+        "http://localhost:8080/documents/archived",
+        { credentials: "include" }
+    );
+    if (!response.ok) throw new Error("Failed to fetch archived documents.");
+    return response.json();
+};
+
+export const unarchiveDocument = async (documentId) => {
+    const response = await fetch(
+        `http://localhost:8080/documents/${documentId}/unarchive`,
+        {
+            method: "PUT",
+            credentials: "include"
+        }
+    );
+    if (!response.ok) throw new Error("Failed to unarchive document.");
+    return response.json();
+};

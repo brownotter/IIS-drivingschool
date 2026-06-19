@@ -58,6 +58,12 @@ function AlertsPage() {
         }
     };
 
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+    };
+
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
             method: "GET",
@@ -88,9 +94,6 @@ function AlertsPage() {
                     <span style={{ ...styles.dot, backgroundColor: dotColor }}></span>
                     <h2 style={styles.sectionTitle}>
                         {title} ({docs.length})
-                        {unread.length > 0 && title !== "Expired" && (
-                            <span style={styles.unreadBadge}>{unread.length} new</span>
-                        )}
                     </h2>
                 </div>
 
@@ -124,7 +127,7 @@ function AlertsPage() {
                                             <td style={styles.td}>{doc.docsTitle}</td>
                                             <td style={styles.td}>{doc.candidateName || "-"}</td>
                                             <td style={styles.td}>{formatType(doc.documentType)}</td>
-                                            <td style={styles.td}>{doc.docsExpireDate || "-"}</td>
+                                            <td style={styles.td}>{formatDate(doc.docsExpireDate) || "-"}</td>
                                             <td style={styles.td}>
                                                 {doc.daysUntilExpiry !== null && doc.daysUntilExpiry !== undefined
                                                     ? doc.daysUntilExpiry > 0

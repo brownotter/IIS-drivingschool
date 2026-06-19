@@ -27,6 +27,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final CandidateRepository candidateRepository;
     private final EmployeeRepository employeeRepository;
     private final DocsVersionRepository docsVersionRepository;
+    private final ArchiveRepository archiveRepository;
 
     private final ObjectMapper objectMapper;
 
@@ -34,6 +35,7 @@ public class DocumentServiceImpl implements DocumentService {
     public List<DocumentsDto> getAllDocumentsByCandidate(Long candidateId) {
         return documentsRepository.findByCandidateId(candidateId)
                 .stream()
+                .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -136,6 +138,9 @@ public class DocumentServiceImpl implements DocumentService {
     public List<DocumentsDto> getAllDocuments() {
         return documentsRepository.findAll()
                 .stream()
+                .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
+                .sorted(Comparator.comparing(Documents::getDocsCreateDate,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -158,6 +163,7 @@ public class DocumentServiceImpl implements DocumentService {
             dto.setDoctorName(exam.getDoctorName());
             dto.setMedResult(exam.getMedResult());
             dto.setMedExamDate(exam.getMedExamDate());
+            dto.setCandidateName(exam.getCandidate().getFirstName() + " " + exam.getCandidate().getLastName());
             return dto;
 
         } else if (doc instanceof Certificate cert) {
@@ -172,6 +178,7 @@ public class DocumentServiceImpl implements DocumentService {
             dto.setCerfNumb(cert.getCerfNumb());
             dto.setCerfDate(cert.getCerfDate());
             dto.setValidDate(cert.getValidDate());
+            dto.setCandidateName(cert.getCandidate().getFirstName() + " " + cert.getCandidate().getLastName());
             return dto;
 
         } else if (doc instanceof Contract contract) {
@@ -186,6 +193,7 @@ public class DocumentServiceImpl implements DocumentService {
             dto.setContNumb(contract.getContNumb());
             dto.setContStartDate(contract.getContStartDate());
             dto.setAmmountCont(contract.getAmmountCont());
+            dto.setCandidateName(contract.getCandidate().getFirstName() + " " + contract.getCandidate().getLastName());
             return dto;
 
         } else if (doc instanceof ExamResult result) {
@@ -201,6 +209,7 @@ public class DocumentServiceImpl implements DocumentService {
             dto.setExamType(result.getExamType());
             dto.setExamRefNum(result.getExamRefNum());
             dto.setExamScore(result.getExamScore());
+            dto.setCandidateName(result.getCandidate().getFirstName() + " " + result.getCandidate().getLastName());
             return dto;
         }
 
@@ -208,9 +217,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto updateMedicalExam(Long documentId, MedicalExamDto dto) {
+    public DocumentsDto updateMedicalExam(Long documentId, MedicalExamDto dto, Long employeeId) {
         MedicalExam exam = medicalExamRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Medical exam not found with id: " + documentId));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         String snapshot = null;
         try {
@@ -249,8 +260,10 @@ public class DocumentServiceImpl implements DocumentService {
                 .document(exam)
                 .versionNum(nextVersionNum)
                 .changeTime(LocalDateTime.now())
-                .changedBy(exam.getEmployee())
-                .changeDescription("Document updated")
+                .changedBy(employee)
+                .changeDescription(dto.getChangeDescription() != null && !dto.getChangeDescription().isBlank()
+                        ? dto.getChangeDescription()
+                        : "Document updated")
                 .snapshotData(snapshot)
                 .build();
 
@@ -260,9 +273,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto updateCertificate(Long documentId, CertificateDto dto) {
+    public DocumentsDto updateCertificate(Long documentId, CertificateDto dto, Long employeeId) {
         Certificate cert = certificateRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Certificate not found with id: " + documentId));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         String snapshot = null;
         try {
@@ -299,8 +314,10 @@ public class DocumentServiceImpl implements DocumentService {
                 .document(cert)
                 .versionNum(nextVersionNum)
                 .changeTime(LocalDateTime.now())
-                .changedBy(cert.getEmployee())
-                .changeDescription("Document updated")
+                .changedBy(employee)
+                .changeDescription(dto.getChangeDescription() != null && !dto.getChangeDescription().isBlank()
+                        ? dto.getChangeDescription()
+                        : "Document updated")
                 .snapshotData(snapshot)
                 .build();
 
@@ -310,9 +327,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto updateContract(Long documentId, ContractDto dto) {
+    public DocumentsDto updateContract(Long documentId, ContractDto dto,Long employeeId) {
         Contract contract = contractRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Contract not found with id: " + documentId));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         String snapshot = null;
         try {
@@ -349,8 +368,10 @@ public class DocumentServiceImpl implements DocumentService {
                 .document(contract)
                 .versionNum(nextVersionNum)
                 .changeTime(LocalDateTime.now())
-                .changedBy(contract.getEmployee())
-                .changeDescription("Document updated")
+                .changedBy(employee)
+                .changeDescription(dto.getChangeDescription() != null && !dto.getChangeDescription().isBlank()
+                        ? dto.getChangeDescription()
+                        : "Document updated")
                 .snapshotData(snapshot)
                 .build();
 
@@ -360,9 +381,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto updateExamResult(Long documentId, ExamResultDto dto) {
+    public DocumentsDto updateExamResult(Long documentId, ExamResultDto dto,Long employeeId) {
         ExamResult result = examResultRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Exam result not found with id: " + documentId));
+
+        Employee employee = getEmployeeOrThrow(employeeId);
 
         String snapshot = null;
         try {
@@ -401,8 +424,10 @@ public class DocumentServiceImpl implements DocumentService {
                 .document(result)
                 .versionNum(nextVersionNum)
                 .changeTime(LocalDateTime.now())
-                .changedBy(result.getEmployee())
-                .changeDescription("Document updated")
+                .changedBy(employee)
+                .changeDescription(dto.getChangeDescription() != null && !dto.getChangeDescription().isBlank()
+                        ? dto.getChangeDescription()
+                        : "Document updated")
                 .snapshotData(snapshot)
                 .build();
 
@@ -421,6 +446,7 @@ public class DocumentServiceImpl implements DocumentService {
         dto.setCurrentVersion(doc.getCurrentVersion());
         dto.setDocsModfDate(doc.getDocsModfDate());
         dto.setDocumentType(doc.getClass().getSimpleName().toUpperCase());
+        dto.setCandidateName(doc.getCandidate().getFirstName() + " " + doc.getCandidate().getLastName());
         return dto;
     }
 
@@ -565,18 +591,40 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public DocumentsDto restoreVersion(Long documentId, Long versionId) {
+    public DocumentsDto restoreVersion(Long documentId, Long versionId, Long employeeId) {
         Documents doc = documentsRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Document not found."));
 
         DocsVersion version = docsVersionRepository.findById(versionId)
                 .orElseThrow(() -> new RuntimeException("Version not found."));
 
+        Employee employee = getEmployeeOrThrow(employeeId);
+
         try {
             if (doc instanceof MedicalExam exam) {
                 MedicalExamDetailsDto snapshot = objectMapper.readValue(
                         version.getSnapshotData(), MedicalExamDetailsDto.class
                 );
+
+                String currentSnapshot = null;
+                try {
+                    MedicalExamDetailsDto currentSnapshotDto = new MedicalExamDetailsDto();
+                    currentSnapshotDto.setDocumentsId(exam.getDocumentsId());
+                    currentSnapshotDto.setDocsTitle(exam.getDocsTitle());
+                    currentSnapshotDto.setDocsCreateDate(exam.getDocsCreateDate());
+                    currentSnapshotDto.setDocsExpireDate(exam.getDocsExpireDate());
+                    currentSnapshotDto.setDocsStatus(exam.getDocsStatus());
+                    currentSnapshotDto.setCurrentVersion(exam.getCurrentVersion());
+                    currentSnapshotDto.setDocsModfDate(exam.getDocsModfDate());
+                    currentSnapshotDto.setInstitution(exam.getInstitution());
+                    currentSnapshotDto.setDoctorName(exam.getDoctorName());
+                    currentSnapshotDto.setMedResult(exam.getMedResult());
+                    currentSnapshotDto.setMedExamDate(exam.getMedExamDate());
+                    currentSnapshot = objectMapper.writeValueAsString(currentSnapshotDto);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 exam.setDocsTitle(snapshot.getDocsTitle());
                 exam.setDocsExpireDate(snapshot.getDocsExpireDate());
                 exam.setDocsStatus(snapshot.getDocsStatus());
@@ -593,8 +641,9 @@ public class DocumentServiceImpl implements DocumentService {
                         .document(exam)
                         .versionNum(nextVersionNum)
                         .changeTime(LocalDateTime.now())
-                        .changedBy(exam.getEmployee())
+                        .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
+                        .snapshotData(currentSnapshot)
                         .build();
                 docsVersionRepository.save(newVersion);
 
@@ -604,6 +653,25 @@ public class DocumentServiceImpl implements DocumentService {
                 ContractDetailsDto snapshot = objectMapper.readValue(
                         version.getSnapshotData(), ContractDetailsDto.class
                 );
+
+                String currentSnapshot = null;
+                try {
+                    ContractDetailsDto currentSnapshotDto = new ContractDetailsDto();
+                    currentSnapshotDto.setDocumentsId(contract.getDocumentsId());
+                    currentSnapshotDto.setDocsTitle(contract.getDocsTitle());
+                    currentSnapshotDto.setDocsCreateDate(contract.getDocsCreateDate());
+                    currentSnapshotDto.setDocsExpireDate(contract.getDocsExpireDate());
+                    currentSnapshotDto.setCurrentVersion(contract.getCurrentVersion());
+                    currentSnapshotDto.setDocsModfDate(contract.getDocsModfDate());
+                    currentSnapshotDto.setContNumb(contract.getContNumb());
+                    currentSnapshotDto.setContStartDate(contract.getContStartDate());
+                    currentSnapshotDto.setAmmountCont(contract.getAmmountCont());
+                    currentSnapshot = objectMapper.writeValueAsString(currentSnapshotDto);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+
                 contract.setDocsTitle(snapshot.getDocsTitle());
                 contract.setDocsExpireDate(snapshot.getDocsExpireDate());
                 contract.setDocsStatus(snapshot.getDocsStatus());
@@ -619,8 +687,9 @@ public class DocumentServiceImpl implements DocumentService {
                         .document(contract)
                         .versionNum(nextVersionNum)
                         .changeTime(LocalDateTime.now())
-                        .changedBy(contract.getEmployee())
+                        .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
+                        .snapshotData(currentSnapshot)
                         .build();
                 docsVersionRepository.save(newVersion);
 
@@ -630,6 +699,25 @@ public class DocumentServiceImpl implements DocumentService {
                 CertificateDetailsDto snapshot = objectMapper.readValue(
                         version.getSnapshotData(), CertificateDetailsDto.class
                 );
+
+                String currentSnapshot = null;
+                try {
+                    CertificateDetailsDto currentSnapshotDto = new CertificateDetailsDto();
+                    currentSnapshotDto.setDocumentsId(cert.getDocumentsId());
+                    currentSnapshotDto.setDocsTitle(cert.getDocsTitle());
+                    currentSnapshotDto.setDocsCreateDate(cert.getDocsCreateDate());
+                    currentSnapshotDto.setDocsExpireDate(cert.getDocsExpireDate());
+                    currentSnapshotDto.setDocsStatus(cert.getDocsStatus());
+                    currentSnapshotDto.setCurrentVersion(cert.getCurrentVersion());
+                    currentSnapshotDto.setDocsModfDate(cert.getDocsModfDate());
+                    currentSnapshotDto.setCerfNumb(cert.getCerfNumb());
+                    currentSnapshotDto.setCerfDate(cert.getCerfDate());
+                    currentSnapshotDto.setDocsExpireDate(cert.getDocsExpireDate());
+                    currentSnapshot = objectMapper.writeValueAsString(currentSnapshotDto);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 cert.setDocsTitle(snapshot.getDocsTitle());
                 cert.setDocsExpireDate(snapshot.getDocsExpireDate());
                 cert.setDocsStatus(snapshot.getDocsStatus());
@@ -645,8 +733,9 @@ public class DocumentServiceImpl implements DocumentService {
                         .document(cert)
                         .versionNum(nextVersionNum)
                         .changeTime(LocalDateTime.now())
-                        .changedBy(cert.getEmployee())
+                        .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
+                        .snapshotData(currentSnapshot)
                         .build();
                 docsVersionRepository.save(newVersion);
 
@@ -656,6 +745,25 @@ public class DocumentServiceImpl implements DocumentService {
                 ExamResultDetailsDto snapshot = objectMapper.readValue(
                         version.getSnapshotData(), ExamResultDetailsDto.class
                 );
+
+                String currentSnapshot = null;
+                try {
+                    ExamResultDetailsDto currentSnapshotDto = new ExamResultDetailsDto();
+                    currentSnapshotDto.setDocumentsId(result.getDocumentsId());
+                    currentSnapshotDto.setDocsTitle(result.getDocsTitle());
+                    currentSnapshotDto.setDocsCreateDate(result.getDocsCreateDate());
+                    currentSnapshotDto.setDocsExpireDate(result.getDocsExpireDate());
+                    currentSnapshotDto.setDocsStatus(result.getDocsStatus());
+                    currentSnapshotDto.setCurrentVersion(result.getCurrentVersion());
+                    currentSnapshotDto.setDocsModfDate(result.getDocsModfDate());
+                    currentSnapshotDto.setExamType(result.getExamType());
+                    currentSnapshotDto.setExamRefNum(result.getExamRefNum());
+                    currentSnapshotDto.setExamScore(result.getExamScore());
+                    currentSnapshot = objectMapper.writeValueAsString(currentSnapshotDto);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 result.setDocsTitle(snapshot.getDocsTitle());
                 result.setDocsExpireDate(snapshot.getDocsExpireDate());
                 result.setDocsStatus(snapshot.getDocsStatus());
@@ -672,8 +780,9 @@ public class DocumentServiceImpl implements DocumentService {
                         .document(result)
                         .versionNum(nextVersionNum)
                         .changeTime(LocalDateTime.now())
-                        .changedBy(result.getEmployee())
+                        .changedBy(employee)
                         .changeDescription("Restored to V" + version.getVersionNum())
+                        .snapshotData(currentSnapshot)
                         .build();
                 docsVersionRepository.save(newVersion);
 
@@ -685,6 +794,65 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         throw new RuntimeException("Unknown document type.");
+    }
+
+
+    @Override
+    public ArchiveDto archiveDocument(Long documentId, String comment) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        doc.setDocsStatus(DocumentStatus.ARCHIVED);
+        documentsRepository.save(doc);
+
+        Archive archive = Archive.builder()
+                .document(doc)
+                .archiveDate(LocalDate.now())
+                .archComment(comment)
+                .build();
+
+        archiveRepository.save(archive);
+
+        return mapToArchiveDto(archive);
+    }
+
+    @Override
+    public List<ArchiveDto> getAllArchivedDocuments() {
+        return archiveRepository.findAllByOrderByArchiveDateDesc()
+                .stream()
+                .map(this::mapToArchiveDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ArchiveDto unarchiveDocument(Long documentId) {
+        Documents doc = documentsRepository.findById(documentId)
+                .orElseThrow(() -> new RuntimeException("Document not found."));
+
+        Archive archive = archiveRepository.findByDocument(doc)
+                .orElseThrow(() -> new RuntimeException("Archive record not found."));
+
+        doc.setDocsStatus(DocumentStatus.ACTIVE);
+        documentsRepository.save(doc);
+
+        archiveRepository.delete(archive);
+
+        return mapToArchiveDto(archive);
+    }
+
+    private ArchiveDto mapToArchiveDto(Archive archive) {
+        ArchiveDto dto = new ArchiveDto();
+        dto.setArchiveId(archive.getArchiveId());
+        dto.setArchiveDate(archive.getArchiveDate());
+        dto.setArchComment(archive.getArchComment());
+        dto.setDocumentId(archive.getDocument().getDocumentsId());
+        dto.setDocumentTitle(archive.getDocument().getDocsTitle());
+        dto.setDocumentType(archive.getDocument().getClass().getSimpleName().toUpperCase());
+        dto.setCandidateName(
+                archive.getDocument().getCandidate().getFirstName() + " " +
+                        archive.getDocument().getCandidate().getLastName()
+        );
+        return dto;
     }
 
     private Candidate getCandidateOrThrow(Long id) {

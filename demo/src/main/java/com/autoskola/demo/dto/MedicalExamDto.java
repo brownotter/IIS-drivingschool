@@ -16,4 +16,5 @@ public class MedicalExamDto {
     private String medResult;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate medExamDate;
+    private String changeDescription;
 }

@@ -39,6 +39,12 @@ function DocumentsPage() {
         setStatus("");
     };
 
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+    };
+
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
             method: "GET",
@@ -63,7 +69,6 @@ function DocumentsPage() {
             case "ACTIVE": return { label: "Active", color: "#155724", bg: "#d4edda" };
             case "EXPIRED": return { label: "Expired", color: "#721c24", bg: "#f8d7da" };
             case "EXPIRING_SOON": return { label: "Expiring soon", color: "#856404", bg: "#fff3cd" };
-            case "ARCHIVED": return { label: "Archived", color: "#383d41", bg: "#e2e3e5" };
             default: return { label: status, color: "#333", bg: "#eee" };
         }
     };
@@ -124,7 +129,6 @@ function DocumentsPage() {
                         <option value="ACTIVE">Active</option>
                         <option value="EXPIRED">Expired</option>
                         <option value="EXPIRING_SOON">Expiring soon</option>
-                        <option value="ARCHIVED">Archived</option>
                     </select>
 
                     <button style={styles.resetBtn} onClick={handleReset}>
@@ -138,8 +142,8 @@ function DocumentsPage() {
                             <tr style={styles.tableHeader}>
                                 <th style={styles.th}>Document name</th>
                                 <th style={styles.th}>Type</th>
+                                <th style={styles.th}>Candidate</th>
                                 <th style={styles.th}>Created</th>
-                                <th style={styles.th}>Modification date</th>
                                 <th style={styles.th}>Expiry date</th>
                                 <th style={styles.th}>Status</th>
                                 <th style={styles.th}></th>
@@ -167,9 +171,9 @@ function DocumentsPage() {
                                         >
                                             <td style={styles.td}>{doc.docsTitle}</td>
                                             <td style={styles.td}>{formatType(doc.documentType)}</td>
-                                            <td style={styles.td}>{doc.docsCreateDate}</td>
-                                            <td style={styles.td}>{doc.docsModfDate || "-"}</td>
-                                            <td style={styles.td}>{doc.docsExpireDate || "-"}</td>
+                                            <td style={styles.td}>{doc.candidateName || "-"}</td>
+                                            <td style={styles.td}>{formatDate(doc.docsCreateDate)}</td>
+                                            <td style={styles.td}>{formatDate(doc.docsExpireDate) || "-"}</td>
                                             <td style={styles.td}>
                                                 <span style={{
                                                     ...styles.badge,

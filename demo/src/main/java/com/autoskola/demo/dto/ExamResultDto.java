@@ -16,4 +16,5 @@ public class ExamResultDto {
     private String examType;
     private String examRefNum;
     private Integer examScore;
+    private String changeDescription;
 }
