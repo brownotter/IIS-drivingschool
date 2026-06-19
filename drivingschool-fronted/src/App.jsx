@@ -29,6 +29,8 @@ import InstructorProfile from "./pages/Instructor/InstructorDashboard";
 import InstructorVehicles from "./pages/Instructor/InstructorVehicles";
 import CandidateNotifications from "./pages/Candidate/CandidateNotifications";
 import CandidateFinancials from "./pages/Candidate/CandidateFinancials";
+import CandidateTheorySimulation from "./pages/Candidate/CandidateTheorySimulation";
+import CandidateTheoryExam from "./pages/Candidate/CandidateTheoryExam";
 import InstructorCandidates from "./pages/Instructor/InstructorCandidates";
 
 function App() {
@@ -85,6 +87,17 @@ function App() {
             <Route
                 path="/candidate/theory-schedule"
                 element={<CandidateTheorySchedule />}
+            />
+
+            
+            <Route
+                path="/candidate/theory-simulation"
+                element={<CandidateTheorySimulation />}
+            />
+
+            <Route
+                path="/candidate/theory-exam"
+                element={<CandidateTheoryExam />}
             />
 
             <Route

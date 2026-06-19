@@ -25,16 +25,21 @@ public interface TheoryClassRepository
             @Param("end") LocalDate end
     );
 
-    List<TheoryClass> findByTheoryDateBetween(
-            LocalDate start,
-            LocalDate end
-    );
+    List<TheoryClass> findByTheoryDateBetween(LocalDate start, LocalDate end);
 
-    boolean existsByProfessorAndTheoryDateAndTheoryStartTimeLessThanAndTheoryEndTimeGreaterThan(
-            User professor,
-            LocalDate theoryDate,
-            LocalTime theoryEndTime,
-            LocalTime theoryStartTime
+    @Query("""
+    SELECT COUNT(tc) > 0
+    FROM TheoryClass tc
+    WHERE tc.professor = :professor
+    AND tc.theoryDate = :theoryDate
+    AND tc.theoryStartTime < :endTime
+    AND tc.theoryEndTime > :startTime
+    """)
+    boolean hasOverlappingClass(
+            @Param("professor") User professor,
+            @Param("theoryDate") LocalDate theoryDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
     );
 
     List<TheoryClass> findByProfessorAndTheoryDateBetween(User professor, LocalDate monday, LocalDate sunday);

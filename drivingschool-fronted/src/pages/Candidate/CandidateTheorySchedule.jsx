@@ -86,12 +86,12 @@ function CandidateTheorySchedule() {
         <div style={styles.container}>
             <Sidebar
                 buttons={[
-                    { label: "My Profile", onClick: () => navigate("/candidate") },//umesto candidate/profile
+                    { label: "My Profile", onClick: () => navigate("/candidate") },
                     { label: "Financials", onClick: () => navigate("/candidate/financials") },
-                    { label: "Schedule", onClick: () => navigate("/candidate/theory-schedule") }, //umesto samo schedule
+                    { label: "Schedule", onClick: () => navigate("/candidate/theory-schedule") },
                     { label: "Notifications", onClick: () => navigate("/candidate/notifications") },
-                    { label: "Theory simulation", onClick: () => navigate("/candidate/simulation") },
-                    { label: "Theory exam", onClick: () => navigate("/candidate/exam") },
+                    { label: "Theory simulation", onClick: () => navigate("/candidate/theory-simulation") },
+                    { label: "Theory exam", onClick: () => navigate("/candidate/theory-exam") },
                     { label: "Reports", onClick: () => navigate("/candidate/reports") },
                 ]}
                 logout={logout}
