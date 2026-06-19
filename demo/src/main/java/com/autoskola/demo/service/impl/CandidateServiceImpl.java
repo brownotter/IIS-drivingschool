@@ -305,6 +305,19 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     @Override
+    public List<CandidateCardDto> getCandidateCardsByInstructor(Long instructorId) {
+        return candidateRepository.findByInstructorId(instructorId).stream()
+                .map(candidate -> CandidateCardDto.builder()
+                        .id(candidate.getId())
+                        .firstName(candidate.getFirstName())
+                        .lastName(candidate.getLastName())
+                        .targetCategory(candidate.getCategoryPackage() != null ? candidate.getCategoryPackage().getCategory().toString() : null)
+                        .practiceClassesCount(candidate.getPracticeClassesCount())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public CandidateFinancialsDto getMyFinancials(
             HttpSession session
     ) {

@@ -31,6 +31,7 @@ import CandidateNotifications from "./pages/Candidate/CandidateNotifications";
 import CandidateFinancials from "./pages/Candidate/CandidateFinancials";
 import CandidateTheorySimulation from "./pages/Candidate/CandidateTheorySimulation";
 import CandidateTheoryExam from "./pages/Candidate/CandidateTheoryExam";
+import InstructorCandidates from "./pages/Instructor/InstructorCandidates";
 
 function App() {
 
@@ -181,6 +182,11 @@ function App() {
                 <Route
                     path="/instructor/vehicles"
                     element={<InstructorVehicles />}
+                />
+
+                <Route
+                    path="/instructor/candidates"
+                    element={<InstructorCandidates />}
                 />
 
                 <Route

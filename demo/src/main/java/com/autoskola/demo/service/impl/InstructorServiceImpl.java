@@ -1,19 +1,21 @@
 package com.autoskola.demo.service.impl;
 
-import com.autoskola.demo.dto.InstructorCreateDto;
-import com.autoskola.demo.dto.InstructorProfileDto;
-import com.autoskola.demo.dto.InstructorUpdateDto;
+import com.autoskola.demo.dto.*;
 import com.autoskola.demo.exception.ResourceAlreadyExistsException;
 import com.autoskola.demo.exception.UserNotFoundException;
 import com.autoskola.demo.exception.UsernameAlreadyExistsException;
 import com.autoskola.demo.model.*;
+import com.autoskola.demo.repository.CandidateRepository;
 import com.autoskola.demo.repository.InstructorRepository;
+import com.autoskola.demo.repository.PracticalClassRepository;
 import com.autoskola.demo.service.InstructorService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 public class InstructorServiceImpl implements InstructorService {
 
     private final InstructorRepository instructorRepository;
+    private final CandidateRepository candidateRepository;
+    private final PracticalClassRepository practicalClassRepository;
 
 
     @Override
@@ -198,6 +202,68 @@ public class InstructorServiceImpl implements InstructorService {
                 .licenceNumber(instructor.getLicenceNumber())
                 .status(instructor.getStatus().name())
                 .averageRate((instructor.getAverageRate()))
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public CandidateLogSummaryDto getCandidateLogSummary(Long candidateId) {
+
+        Candidate candidate = candidateRepository.findById(candidateId)
+                .orElseThrow(UserNotFoundException::new);
+
+        List<PracticalClass> classes = practicalClassRepository
+                .findByCandidateIdOrderByDateDescStartTimeDesc(candidateId);
+
+        List<PracticalClassDto> dtoClasses = new ArrayList<>();
+        int completedClassesCount = 0;
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        int totalClasses = classes.size();
+
+        String instructorName = (candidate.getInstructor() != null)
+                ? candidate.getInstructor().getFirstName() + " " + candidate.getInstructor().getLastName()
+                : "None";
+
+        for (int i = 0; i < totalClasses; i++) {
+            PracticalClass practicalClass = classes.get(i);
+            int orderNum = totalClasses - i;
+
+            String noteText = "";
+            if (practicalClass.getLessonLog() != null) {
+                noteText = practicalClass.getLessonLog().getInstructorNote();
+            }
+
+            if (PracticalClassStatus.COMPLETED.equals(practicalClass.getStatus())) {
+                completedClassesCount++;
+            }
+
+            PracticalClassDto dto = PracticalClassDto.builder()
+                    .orderNum(orderNum)
+                    .topicName(practicalClass.getTopic() != null ? practicalClass.getTopic().getName() : "Not defined.")
+                    .classDate(practicalClass.getDate() != null ? practicalClass.getDate().format(dateFormatter) : "DD/MM/YYYY")
+                    .startTime(practicalClass.getStartTime() != null ? practicalClass.getStartTime().format(timeFormatter) : "XX:XX")
+                    .endTime(practicalClass.getEndTime() != null ? practicalClass.getEndTime().format(timeFormatter) : "XX:XX")
+                    .note(noteText)
+                    .status(practicalClass.getStatus().name())
+                    .build();
+
+            dtoClasses.add(dto);
+        }
+
+        String systemRecommendation = "No active recommendations. The system is waiting for the next class to be completed.";
+
+        return CandidateLogSummaryDto.builder()
+                .id(candidate.getId())
+                .firstName(candidate.getFirstName())
+                .lastName(candidate.getLastName())
+                .targetCategory(candidate.getCategoryPackage().getCategory().name())
+                .practiceClassesCount(completedClassesCount)
+                .assignedInstructor(instructorName)
+                .recommendation(systemRecommendation)
+                .classes(dtoClasses)
                 .build();
     }
 }
