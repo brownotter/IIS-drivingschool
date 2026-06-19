@@ -14,4 +14,5 @@ public class DocumentsDto {
     private DocumentStatus docsStatus;
     private Integer currentVersion;
     private LocalDate docsModfDate;
+    private String candidateName;
 }

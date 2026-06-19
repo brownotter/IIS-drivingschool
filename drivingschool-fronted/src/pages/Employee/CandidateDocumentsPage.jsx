@@ -31,6 +31,12 @@ function CandidateDocumentsPage() {
         }
     };
 
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+    };
+
     const formatType = (type) => {
         switch (type) {
             case "MEDICALEXAM": return "Medical exam";
@@ -121,8 +127,8 @@ function CandidateDocumentsPage() {
                                         >
                                             <td style={styles.td}>{doc.docsTitle}</td>
                                             <td style={styles.td}>{formatType(doc.documentType)}</td>
-                                            <td style={styles.td}>{doc.docsCreateDate}</td>
-                                            <td style={styles.td}>{doc.docsExpireDate || "-"}</td>
+                                            <td style={styles.td}>{formatDate(doc.docsCreateDate)}</td>
+                                            <td style={styles.td}>{formatDate(doc.docsExpireDate) || "-"}</td>
                                             <td style={styles.td}>
                                                 <span style={{
                                                     ...styles.badge,

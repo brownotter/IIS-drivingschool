@@ -39,6 +39,12 @@ function DocumentsPage() {
         setStatus("");
     };
 
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+    };
+
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
             method: "GET",
@@ -136,8 +142,8 @@ function DocumentsPage() {
                             <tr style={styles.tableHeader}>
                                 <th style={styles.th}>Document name</th>
                                 <th style={styles.th}>Type</th>
+                                <th style={styles.th}>Candidate</th>
                                 <th style={styles.th}>Created</th>
-                                <th style={styles.th}>Modification date</th>
                                 <th style={styles.th}>Expiry date</th>
                                 <th style={styles.th}>Status</th>
                                 <th style={styles.th}></th>
@@ -165,9 +171,9 @@ function DocumentsPage() {
                                         >
                                             <td style={styles.td}>{doc.docsTitle}</td>
                                             <td style={styles.td}>{formatType(doc.documentType)}</td>
-                                            <td style={styles.td}>{doc.docsCreateDate}</td>
-                                            <td style={styles.td}>{doc.docsModfDate || "-"}</td>
-                                            <td style={styles.td}>{doc.docsExpireDate || "-"}</td>
+                                            <td style={styles.td}>{doc.candidateName || "-"}</td>
+                                            <td style={styles.td}>{formatDate(doc.docsCreateDate)}</td>
+                                            <td style={styles.td}>{formatDate(doc.docsExpireDate) || "-"}</td>
                                             <td style={styles.td}>
                                                 <span style={{
                                                     ...styles.badge,

@@ -139,6 +139,8 @@ public class DocumentServiceImpl implements DocumentService {
         return documentsRepository.findAll()
                 .stream()
                 .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
+                .sorted(Comparator.comparing(Documents::getDocsCreateDate,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -444,6 +446,7 @@ public class DocumentServiceImpl implements DocumentService {
         dto.setCurrentVersion(doc.getCurrentVersion());
         dto.setDocsModfDate(doc.getDocsModfDate());
         dto.setDocumentType(doc.getClass().getSimpleName().toUpperCase());
+        dto.setCandidateName(doc.getCandidate().getFirstName() + " " + doc.getCandidate().getLastName());
         return dto;
     }
 

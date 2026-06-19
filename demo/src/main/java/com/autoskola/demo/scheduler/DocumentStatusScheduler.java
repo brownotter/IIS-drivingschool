@@ -1,8 +1,7 @@
 package com.autoskola.demo.scheduler;
 
 import com.autoskola.demo.model.*;
-import com.autoskola.demo.repository.DocumentsRepository;
-import com.autoskola.demo.repository.DocsValidityRepository;
+import com.autoskola.demo.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,6 +16,7 @@ public class DocumentStatusScheduler {
 
     private final DocumentsRepository documentsRepository;
     private final DocsValidityRepository docsValidityRepository;
+    private final ArchiveRepository archiveRepository;
 
     //test provera
     @Scheduled(fixedRate = 10000)
@@ -26,6 +26,7 @@ public class DocumentStatusScheduler {
 
         LocalDate today = LocalDate.now();
         LocalDate soonThreshold = today.plusDays(30);
+        LocalDate autoArchiveThreshold = today.minusDays(15);
 
         List<Documents> documents = documentsRepository.findAll();
 
@@ -36,6 +37,23 @@ public class DocumentStatusScheduler {
 
             LocalDate expireDate = doc.getDocsExpireDate();
             int daysUntilExpiry = (int) ChronoUnit.DAYS.between(today, expireDate);
+
+            // Automatsko arhiviranje ako je isteklo pre vise od 15 dana
+            if (expireDate.isBefore(autoArchiveThreshold)) {
+                doc.setDocsStatus(DocumentStatus.ARCHIVED);
+                documentsRepository.save(doc);
+
+                // Kreiraj archive zapis ako vec ne postoji
+                if (!archiveRepository.findByDocument(doc).isPresent()) {
+                    Archive archive = Archive.builder()
+                            .document(doc)
+                            .archiveDate(today)
+                            .archComment("Automatically archived — expired more than 15 days ago")
+                            .build();
+                    archiveRepository.save(archive);
+                }
+                continue;
+            }
 
             // Azuriranje status dokumenta
             if (expireDate.isBefore(today)) {

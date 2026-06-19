@@ -23,6 +23,12 @@ function EmployeeHome() {
         }
     };
 
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+    };
+
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
             method: "GET",
@@ -110,7 +116,7 @@ function EmployeeHome() {
                                         </span>
                                         <span style={styles.alertDate}>
                                             {doc.docsExpireDate
-                                                ? `Expires ${doc.docsExpireDate}`
+                                                ? `Expires ${formatDate(doc.docsExpireDate)}`
                                                 : "No expiry date"
                                             }
                                         </span>

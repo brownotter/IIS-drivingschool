@@ -34,6 +34,12 @@ function ArchivePage() {
         }
     };
 
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+    };
+
     const formatType = (type) => {
         switch (type) {
             case "MEDICALEXAM": return "Medical exam";
@@ -114,7 +120,7 @@ function ArchivePage() {
                                         <td style={styles.td}>{doc.documentTitle}</td>
                                         <td style={styles.td}>{formatType(doc.documentType)}</td>
                                         <td style={styles.td}>{doc.candidateName}</td>
-                                        <td style={styles.td}>{doc.archiveDate}</td>
+                                        <td style={styles.td}>{formatDate(doc.archiveDate)}</td>
                                         <td style={styles.td}>{doc.archComment || "-"}</td>
                                         <td style={styles.td}>
                                             <div style={{ display: "flex", gap: "8px" }}>

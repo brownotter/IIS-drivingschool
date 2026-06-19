@@ -80,7 +80,7 @@ function DocumentDetailsPage() {
     issueDate: "Issue date"
     };
 
-    const hiddenFields = ["documentsId", "documentType"];
+    const hiddenFields = ["documentsId", "documentType", "candidateName"];
 
     const handleArchive = async () => {
     try {
@@ -119,6 +119,12 @@ function DocumentDetailsPage() {
         navigate("/");
     };
 
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+    };
+
     const formatType = (type) => {
         switch (type) {
             case "MEDICALEXAM": return "Medical exam";
@@ -148,7 +154,7 @@ function DocumentDetailsPage() {
                 <>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Examination date</label>
-                        <div style={styles.fieldBox}>{doc.medExamDate || "-"}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.medExamDate) || "-"}</div>
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Institution</label>
@@ -175,7 +181,7 @@ function DocumentDetailsPage() {
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Start date</label>
-                        <div style={styles.fieldBox}>{doc.contStartDate}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.contStartDate)}</div>
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Amount</label>
@@ -194,11 +200,11 @@ function DocumentDetailsPage() {
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Certificate date</label>
-                        <div style={styles.fieldBox}>{doc.cerfDate}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.cerfDate)}</div>
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Valid date</label>
-                        <div style={styles.fieldBox}>{doc.validDate}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.validDate)}</div>
                     </div>
                 </>
             );
@@ -221,7 +227,7 @@ function DocumentDetailsPage() {
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Issue date</label>
-                        <div style={styles.fieldBox}>{doc.issueDate}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.issueDate)}</div>
                     </div>
                 </>
             );
@@ -292,15 +298,15 @@ function DocumentDetailsPage() {
                         <div style={styles.row}>
                             <div style={styles.fieldGroup}>
                                 <label style={styles.label}>Created date</label>
-                                <div style={styles.fieldBox}>{doc.docsCreateDate}</div>
+                                <div style={styles.fieldBox}>{formatDate(doc.docsCreateDate)}</div>
                             </div>
                             <div style={styles.fieldGroup}>
                                 <label style={styles.label}>Expiry date</label>
-                                <div style={styles.fieldBox}>{doc.docsExpireDate || "-"}</div>
+                                <div style={styles.fieldBox}>{formatDate(doc.docsExpireDate) || "-"}</div>
                             </div>
                             <div style={styles.fieldGroup}>
                                 <label style={styles.label}>Last modified</label>
-                                <div style={styles.fieldBox}>{doc.docsModfDate || "-"}</div>
+                                <div style={styles.fieldBox}>{formatDate(doc.docsModfDate) || "-"}</div>
                             </div>
                         </div>
 
@@ -352,10 +358,10 @@ function DocumentDetailsPage() {
                                 }
                             </span>
                             <span style={styles.alertDate}>
-                                Valid until: {validity.validUntil || "-"}
+                                Valid until: {formatDate(validity.validUntil) || "-"}
                             </span>
                             <span style={styles.alertDate}>
-                                Last check: {validity.lastCheck || "-"}
+                                Last check: {formatDate(validity.lastCheck) || "-"}
                             </span>
                         </div>
                     ) : (
