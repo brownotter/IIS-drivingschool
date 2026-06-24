@@ -12,6 +12,10 @@ public interface CandidateService {
     CandidateDetailsDto getCandidateById(Long id);
     CandidateFinancialsDto getMyFinancials(HttpSession session);
 
+    RecommendationDto getMyRecommendation(HttpSession session);
+    String acceptRecommendation(HttpSession session);
+    String declineRecommendation(HttpSession session);
+
     String updateProfile(
             UpdateCandidateDto dto,
             HttpSession session

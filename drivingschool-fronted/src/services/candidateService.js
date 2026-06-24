@@ -134,3 +134,41 @@ export const getCandidateFinancials = async () => {
 
     return await response.json();
 };
+
+export const getRecommendation = async () => {
+
+    const response = await fetch(
+        "http://localhost:8080/candidate/recommendation",
+        {
+            credentials: "include"
+        }
+    );
+
+    return await response.json();
+};
+
+export const acceptRecommendation = async () => {
+
+    const response = await fetch(
+        "http://localhost:8080/candidate/recommendation/accept",
+        {
+            method: "POST",
+            credentials: "include"
+        }
+    );
+
+    return await response.text();
+};
+
+export const declineRecommendation = async () => {
+
+    const response = await fetch(
+        "http://localhost:8080/candidate/recommendation/decline",
+        {
+            method: "POST",
+            credentials: "include"
+        }
+    );
+
+    return await response.text();
+};
