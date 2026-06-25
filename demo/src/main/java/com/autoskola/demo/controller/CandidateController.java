@@ -114,4 +114,31 @@ public class CandidateController {
                 candidateService.getMyFinancials(session)
         );
     }
+
+    @GetMapping("/recommendation")
+    public ResponseEntity<RecommendationDto>
+    getRecommendation(HttpSession session) {
+
+        return ResponseEntity.ok(
+                candidateService.getMyRecommendation(session)
+        );
+    }
+
+    @PostMapping("/recommendation/accept")
+    public ResponseEntity<String>
+    acceptRecommendation(HttpSession session) {
+
+        return ResponseEntity.ok(
+                candidateService.acceptRecommendation(session)
+        );
+    }
+
+    @PostMapping("/recommendation/decline")
+    public ResponseEntity<String>
+    declineRecommendation(HttpSession session) {
+
+        return ResponseEntity.ok(
+                candidateService.declineRecommendation(session)
+        );
+    }
 }

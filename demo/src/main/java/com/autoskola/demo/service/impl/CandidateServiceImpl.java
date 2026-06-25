@@ -2,10 +2,12 @@ package com.autoskola.demo.service.impl;
 
 import com.autoskola.demo.dto.*;
 import com.autoskola.demo.model.*;
+import com.autoskola.demo.repository.AdditionalLessonRequestRepository;
 import com.autoskola.demo.repository.CandidateRepository;
 import com.autoskola.demo.repository.PaymentRepository;
 import com.autoskola.demo.service.CandidateService;
 
+import com.autoskola.demo.service.NotificationService;
 import jakarta.servlet.http.HttpSession;
 
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +26,8 @@ public class CandidateServiceImpl implements CandidateService {
 
     private final CandidateRepository candidateRepository;
     private final PaymentRepository paymentRepository;
+    private final AdditionalLessonRequestRepository additionalLessonRequestRepository;
+    private final NotificationService notificationService;
 
     @Override
     public CandidateProfileDto getProfile(
@@ -404,5 +409,146 @@ public class CandidateServiceImpl implements CandidateService {
                 .nextPaymentAmount(nextPaymentAmount)
                 .fullyPaid(fullyPaid)
                 .build();
+    }
+
+    @Override
+    public RecommendationDto getMyRecommendation(HttpSession session) {
+
+        User sessionUser =
+                (User) session.getAttribute("user");
+
+        Candidate candidate =
+                candidateRepository
+                        .findById(sessionUser.getId())
+                        .orElseThrow();
+
+        boolean alreadyHandled =
+                additionalLessonRequestRepository
+                        .findByCandidateIdAndStatus(
+                                candidate.getId(),
+                                RecommendationStatus.ACCEPTED
+                        )
+                        .isPresent()
+                        ||
+                        additionalLessonRequestRepository
+                                .findByCandidateIdAndStatus(
+                                        candidate.getId(),
+                                        RecommendationStatus.DECLINED
+                                )
+                                .isPresent();
+
+        if (alreadyHandled) {
+            return RecommendationDto.builder()
+                    .visible(false)
+                    .message("No more active recommendations.")
+                    .build();
+        }
+
+        if (
+                candidate.getStatus() != CandidateStatus.DRIVING
+                        ||
+                        candidate.getPracticeClassesCount() < 35
+                        ||
+                        candidate.getPracticeClassesCount() > 40
+        ) {
+            return RecommendationDto.builder()
+                    .visible(false)
+                    .message("No active recommendations.")
+                    .build();
+        }
+
+        String weakness =
+                getMockWeakness(candidate.getId());
+
+        return RecommendationDto.builder()
+                .visible(true)
+                .weakness(weakness)
+                .recommendationText(
+                        "We recommend an additional driving lesson focused on: "
+                                + weakness
+                )
+                .build();
+    }
+
+    private String getMockWeakness(Long candidateId) {
+
+        List<String> weaknesses = List.of(
+                "Parallel parking",
+                "Reverse driving",
+                "Hill start",
+                "Roundabout driving",
+                "Lane changing",
+                "Traffic signs",
+                "Intersection priority",
+                "Night driving",
+                "Pedestrian crossings",
+                "Speed control"
+        );
+
+        int index =
+                Math.toIntExact(candidateId % weaknesses.size());
+
+        return weaknesses.get(index);
+    }
+
+    @Override
+    public String acceptRecommendation(HttpSession session) {
+
+        User sessionUser =
+                (User) session.getAttribute("user");
+
+        Candidate candidate =
+                candidateRepository
+                        .findById(sessionUser.getId())
+                        .orElseThrow();
+
+        String weakness = getMockWeakness(candidate.getId());
+
+        AdditionalLessonRequest request =
+                AdditionalLessonRequest.builder()
+                        .candidate(candidate)
+                        .weakness(weakness)
+                        .createdAt(LocalDateTime.now())
+                        .status(RecommendationStatus.ACCEPTED)
+                        .build();
+
+        additionalLessonRequestRepository.save(request);
+
+        notificationService.createNotification(
+                candidate,
+                "Additional lesson request sent",
+                "Your request for an additional lesson focused on "
+                        + weakness
+                        + " has been sent."
+        );
+
+        return "Additional lesson request sent.";
+    }
+
+    @Override
+    public String declineRecommendation(HttpSession session) {
+
+        User sessionUser =
+                (User) session.getAttribute("user");
+
+        Candidate candidate =
+                candidateRepository
+                        .findById(sessionUser.getId())
+                        .orElseThrow();
+
+        String weakness =
+                getMockWeakness(candidate.getId());
+
+        AdditionalLessonRequest request =
+                AdditionalLessonRequest.builder()
+                        .candidate(candidate)
+                        .weakness(weakness)
+                        .createdAt(LocalDateTime.now())
+                        .status(RecommendationStatus.DECLINED)
+                        .build();
+
+        additionalLessonRequestRepository.save(request);
+
+        return "Recommendation declined.";
     }
 }
