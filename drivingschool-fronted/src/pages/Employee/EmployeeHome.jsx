@@ -23,6 +23,24 @@ function EmployeeHome() {
         }
     };
 
+    const handleDownloadReport = async () => {
+    try {
+        const response = await fetch(
+            "http://localhost:8080/documents/report/all",
+            { credentials: "include" }
+        );
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "report_all_candidates.pdf";
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error(err);
+    }
+    };
+
     const formatDate = (date) => {
     if (!date) return "-";
     const [year, month, day] = date.split("-");
@@ -74,9 +92,9 @@ function EmployeeHome() {
 
                         <button
                             style={styles.addBtn}
-                            onClick={() => navigate("/employee/reports/new")}
+                            onClick={handleDownloadReport}
                         >
-                             Generate a document <br></br> completeness report
+                             Generate a completeness <br></br> report document
                         </button>
 
                     </div>

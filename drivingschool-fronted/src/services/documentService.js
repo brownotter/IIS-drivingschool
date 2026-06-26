@@ -214,3 +214,12 @@ export const unarchiveDocument = async (documentId) => {
     if (!response.ok) throw new Error("Failed to unarchive document.");
     return response.json();
 };
+
+export const downloadCandidateReport = async (candidateId) => {
+    const response = await fetch(
+        `http://localhost:8080/documents/report/candidate/${candidateId}`,
+        { credentials: "include" }
+    );
+    if (!response.ok) throw new Error("Failed to generate report.");
+    return response.blob();
+};

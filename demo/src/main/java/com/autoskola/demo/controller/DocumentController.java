@@ -210,4 +210,33 @@ public class DocumentController {
                 .body(pdf);
     }
 
+    @GetMapping("/report/candidate/{candidateId}")
+    public ResponseEntity<byte[]> generateCandidateReport(
+            @PathVariable Long candidateId
+    ) {
+        byte[] pdf = pdfGeneratorService.generateDocumentationReport(candidateId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment",
+                "report_candidate_" + candidateId + ".pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdf);
+    }
+
+    @GetMapping("/report/all")
+    public ResponseEntity<byte[]> generateAllCandidatesReport() {
+        byte[] pdf = pdfGeneratorService.generateAllCandidatesReport();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "report_all_candidates.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdf);
+    }
+
 }
