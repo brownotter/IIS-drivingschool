@@ -18,4 +18,6 @@ public class CandidateListDto {
     private Category category;
 
     private CandidateStatus status;
+
+    private Double packagePrice;
 }

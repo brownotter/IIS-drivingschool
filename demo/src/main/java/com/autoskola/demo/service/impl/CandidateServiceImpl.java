@@ -132,7 +132,8 @@ public class CandidateServiceImpl implements CandidateService {
                         candidate.getLastName(),
                         //candidate.getTargetCategory(),
                         candidate.getCategoryPackage().getCategory(),
-                        candidate.getStatus()
+                        candidate.getStatus(),
+                        candidate.getCategoryPackage().getPrice()
                 ))
                 .collect(Collectors.toList());
     }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllCandidates } from "../../services/candidateService";
+import { getAllCandidates, getTheoryFinalScore } from "../../services/candidateService";
 import { getEmployeeProfile } from "../../services/employeeService";
 import {
     createMedicalExam,
@@ -34,6 +34,13 @@ function CreateDocumentPage() {
 
     useEffect(() => {
         setSpecificFields({});
+
+        if (documentType === "CONTRACT" && selectedCandidate?.packagePrice) {
+        setSpecificFields({
+            ammountCont: selectedCandidate.packagePrice
+        });
+    }
+
     }, [documentType]);
 
     const loadCandidates = async () => {
@@ -62,9 +69,16 @@ function CreateDocumentPage() {
         setSpecificFields({ ...specificFields, [e.target.name]: e.target.value });
     };
 
-    const handleCandidateSelect = (e) => {
+    const handleCandidateSelect = async (e) => {
         const candidate = candidates.find(c => c.id === parseInt(e.target.value));
         setSelectedCandidate(candidate);
+
+        if (documentType === "CONTRACT" && candidate?.packagePrice) {
+        setSpecificFields(prev => ({
+            ...prev,
+            ammountCont: candidate.packagePrice
+            }));
+        }
     };
 
 
@@ -117,7 +131,7 @@ function CreateDocumentPage() {
             setTimeout(() => navigate("/employee/documents"), 1500);
 
         } catch (err) {
-            setMessage("Error creating document. Please try again.");
+            setMessage(err.message || "Error creating document. Please try again.");
         }
     };
 
@@ -253,12 +267,40 @@ function CreateDocumentPage() {
                     <div style={styles.specificBox}>
                         <div style={styles.fieldGroup}>
                             <label style={styles.label}>Exam type</label>
-                            <input
+                            <select
                                 name="examType"
                                 value={specificFields.examType || ""}
-                                onChange={handleSpecificChange}
-                                style={styles.input}
-                            />
+                                onChange={async (e) => {
+                                    const type = e.target.value;
+                                    setSpecificFields(prev => ({ ...prev, examType: type }));
+
+                                    if (type === "THEORY" && selectedCandidate) {
+                                        try {
+                                            const score = await getTheoryFinalScore(selectedCandidate.id);
+                                            if (score !== null) {
+                                                setSpecificFields(prev => ({
+                                                    ...prev,
+                                                    examType: type,
+                                                    examScore: score
+                                                }));
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                        }
+                                    } else if (type === "PRACTICE") {
+                                        setSpecificFields(prev => ({
+                                            ...prev,
+                                            examType: type,
+                                            examScore: ""
+                                        }));
+                                    }
+                                }}
+                                style={styles.select}
+                            >
+                                <option value="" disabled>Select exam type</option>
+                                <option value="THEORY">Theory</option>
+                                <option value="PRACTICE">Practice</option>
+                            </select>
                         </div>
                         <div style={styles.fieldGroup}>
                             <label style={styles.label}>Reference number</label>

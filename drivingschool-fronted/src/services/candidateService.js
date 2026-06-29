@@ -135,6 +135,16 @@ export const getCandidateFinancials = async () => {
     return await response.json();
 };
 
+export const getTheoryFinalScore = async (candidateId) => {
+    const response = await fetch(
+        `http://localhost:8080/api/theory-tests/candidate/${candidateId}/final-exam-result`,
+        { credentials: "include" }
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data?.score ?? null;
+};
+
 export const getRecommendation = async () => {
 
     const response = await fetch(
