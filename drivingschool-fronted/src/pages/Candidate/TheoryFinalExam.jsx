@@ -13,6 +13,7 @@ function TheoryFinalExam() {
     const [errorMessage, setErrorMessage] = useState("");
     const [validationMessage, setValidationMessage] = useState("");
     const [timeLeft, setTimeLeft] = useState(null);
+    const [autoSubmitted, setAutoSubmitted] = useState(false);
 
     useEffect(() => {
         fetch(`http://localhost:8080/api/theory-tests/${testId}/questions`, {
@@ -66,25 +67,25 @@ function TheoryFinalExam() {
             });
     }, [testId]);
 
-    useEffect(() => {
-        if (timeLeft === null || timeLeft <= 0 || submitting) {
+   useEffect(() => {
+
+        if (timeLeft === null || submitting || autoSubmitted) {
             return;
         }
 
-        const timer = setInterval(() => {
-            setTimeLeft((previousTime) => {
-                if (previousTime <= 1) {
-                    clearInterval(timer);
-                    submitAnswers(true);
-                    return 0;
-                }
+        if (timeLeft <= 0) {
+            setAutoSubmitted(true);
+            submitAnswers(true);
+            return;
+        }
 
-                return previousTime - 1;
-            });
+        const timer = setTimeout(() => {
+            setTimeLeft(timeLeft - 1);
         }, 1000);
 
-        return () => clearInterval(timer);
-    }, [timeLeft, submitting]);
+        return () => clearTimeout(timer);
+
+    }, [timeLeft, submitting, autoSubmitted]);
 
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
@@ -120,6 +121,10 @@ function TheoryFinalExam() {
 
     const submitAnswers = async (autoSubmit = false) => {
         setValidationMessage("");
+
+        if (autoSubmit) {
+            setValidationMessage("Time has expired. Your test is being submitted automatically...");
+        }
 
         if (!autoSubmit && Object.keys(selectedAnswers).length !== questions.length) {
             setValidationMessage("You must answer all questions before submitting.");
@@ -158,6 +163,9 @@ function TheoryFinalExam() {
 
             await response.json();
 
+            if (autoSubmit) {
+                await new Promise(resolve => setTimeout(resolve, 1500));
+            }
             navigate(`/candidate/theory-exam/result/${testId}`);
 
         } catch (error) {
@@ -369,10 +377,12 @@ const styles = {
     },
 
     questionImage: {
-        maxWidth: "100%",
+        maxWidth: "160px",
+        maxHeight: "160px",
         height: "auto",
         marginBottom: "15px",
-        borderRadius: "8px"
+        borderRadius: "8px",
+        justifyContent: "flex-start"
     },
 
     answerOption: {

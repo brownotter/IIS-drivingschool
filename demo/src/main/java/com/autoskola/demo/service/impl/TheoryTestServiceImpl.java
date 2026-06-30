@@ -261,6 +261,14 @@ public class TheoryTestServiceImpl implements TheoryTestService {
         if (theoryTest.getSubmittedAt() != null) {
             throw new RuntimeException("Theory test already submitted");
         }
+
+        if (theoryTest.getTestType() == TheoryTestType.FINAL_EXAM) {
+            LocalDateTime examEndTime = theoryTest.getStartedAt().plusMinutes(theoryTest.getTimePerFinalExam());
+            if (LocalDateTime.now().isAfter(examEndTime.plusSeconds(5))) {
+                throw new RuntimeException("Time for final exam has expired");
+            }
+        }
+
         int correctAnswers = 0;
         for (SubmitTestAnswerDto answerDto : dto.getAnswers()) {
             Question question = questionRepository.findById(answerDto.getQuestionId()).orElseThrow(() -> new RuntimeException("Question not found"));
@@ -291,12 +299,17 @@ public class TheoryTestServiceImpl implements TheoryTestService {
             increaseSimulationCount(candidate);
             updateSimulationScore(candidate);
         }
-        candidate.setTheoryAttemptsCount(candidate.getTheoryAttemptsCount() + 1);
-        candidate.setTheoryScore(score);
-        if(score >= PASSING_SCORE){
-            candidate.setStatus(CandidateStatus.DRIVING);
+
+        if (theoryTest.getTestType() == TheoryTestType.FINAL_EXAM) {
+            candidate.setTheoryAttemptsCount(candidate.getTheoryAttemptsCount() + 1);
+            candidate.setTheoryScore(score);
+
+            if (score >= PASSING_SCORE) {
+                candidate.setStatus(CandidateStatus.DRIVING);
+            }
+
+            candidateRepository.save(candidate);
         }
-        candidateRepository.save(candidate);
         return theoryTest;
     }
 

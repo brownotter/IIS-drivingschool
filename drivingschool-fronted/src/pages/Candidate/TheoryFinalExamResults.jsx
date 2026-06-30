@@ -279,10 +279,12 @@ const styles = {
     },
 
     questionImage: {
-        maxWidth: "100%",
+        maxWidth: "160px",
+        maxHeight: "160px",
         height: "auto",
         marginBottom: "15px",
-        borderRadius: "8px"
+        borderRadius: "8px",
+        justifyContent: "flex-start"
     },
 
     correctText: {
