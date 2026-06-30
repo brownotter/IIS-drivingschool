@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 function TheoryScheduleViewPage() {
     const navigate = useNavigate();
+
     const [schedule, setSchedule] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -33,12 +34,17 @@ function TheoryScheduleViewPage() {
     };
 
     const formatDate = (dateStr) => {
-        if (!dateStr) return "";
+        if (!dateStr) {
+            return "";
+        }
+
         try {
             const parts = dateStr.split("-");
+
             if (parts.length === 3) {
                 return `${parts[2]}.${parts[1]}.${parts[0]}.`;
             }
+
             return dateStr;
         } catch {
             return dateStr;
@@ -46,11 +52,16 @@ function TheoryScheduleViewPage() {
     };
 
     const formatTime = (timeStr) => {
-        if (!timeStr) return "";
+        if (!timeStr) {
+            return "";
+        }
+
         const parts = timeStr.split(":");
+
         if (parts.length >= 2) {
             return `${parts[0]}:${parts[1]}`;
         }
+
         return timeStr;
     };
 
@@ -58,6 +69,7 @@ function TheoryScheduleViewPage() {
         <div style={styles.container}>
             <Sidebar
                 buttons={[
+                    { label: "My Profile", onClick: () => navigate("/admin/profile") },
                     { label: "Candidates", onClick: () => navigate("/admin/candidates") },
                     { label: "Professors", onClick: () => navigate("/admin/professors") },
                     { label: "Instructors", onClick: () => navigate("/admin/instructors") },
@@ -69,38 +81,39 @@ function TheoryScheduleViewPage() {
             />
 
             <div style={styles.content}>
-                <div style={styles.wireframeBox}>
+                <div style={styles.mainCard}>
                     <h1 style={styles.mainTitle}>Theory Class Schedule</h1>
 
                     <div style={styles.tabContainer}>
-                        <button 
+                        <button
                             type="button"
                             style={styles.tabBtn}
                             onClick={() => navigate("/admin/theory-schedule")}
                         >
-                            Auto Generate
+                            Create Schedule
                         </button>
-                        <button 
+
+                        <button
                             type="button"
-                            style={styles.tabBtn}
-                            onClick={() => navigate("/admin/theory-schedule")}
+                            style={{
+                                ...styles.tabBtn,
+                                ...styles.activeTabBtn
+                            }}
                         >
-                            Manual Create
-                        </button>
-                        <button 
-                            type="button"
-                            style={{...styles.tabBtn, ...styles.activeTabBtn}}
-                            onClick={() => {}}
-                        >
-                            Schedule
+                            View Schedule
                         </button>
                     </div>
 
-                    {error && <div style={styles.errorMessage}>{error}</div>}
+                    {error && (
+                        <div style={styles.errorMessage}>
+                            {error}
+                        </div>
+                    )}
 
-                    {/* Loader ili Tabela */}
                     {loading ? (
-                        <div style={styles.infoMessage}>Loading schedule...</div>
+                        <div style={styles.infoCard}>
+                            Loading schedule...
+                        </div>
                     ) : (
                         <div style={styles.tableWrapper}>
                             <table style={styles.table}>
@@ -113,30 +126,50 @@ function TheoryScheduleViewPage() {
                                         <th style={styles.th}>Enrolled / Capacity</th>
                                     </tr>
                                 </thead>
+
                                 <tbody>
                                     {schedule.map((item, index) => (
-                                        <tr key={item.theoryClassId || index} style={styles.tr}>
+                                        <tr
+                                            key={item.theoryClassId || index}
+                                            style={styles.tr}
+                                        >
                                             <td style={styles.td}>
-                                                <strong>{formatDate(item.theoryDate)}</strong>
+                                                <strong>
+                                                    {formatDate(item.theoryDate)}
+                                                </strong>
                                             </td>
+
                                             <td style={styles.td}>
-                                                {formatTime(item.theoryStartTime)} - {formatTime(item.theoryEndTime)}
+                                                {formatTime(item.theoryStartTime)} -{" "}
+                                                {formatTime(item.theoryEndTime)}
                                             </td>
+
                                             <td style={styles.td}>
-                                                {item.domainOrderNumber ? `${item.domainOrderNumber}. ` : ""}
+                                                {item.domainOrderNumber
+                                                    ? `${item.domainOrderNumber}. `
+                                                    : ""}
                                                 {item.domainName || "—"}
                                             </td>
+
                                             <td style={styles.td}>
-                                                {item.professorName}
+                                                {item.professorName || "—"}
                                             </td>
+
                                             <td style={styles.td}>
-                                                <span style={{
-                                                    fontWeight: "bold", 
-                                                    color: (item.currentEnrolled >= item.capacity) ? "#d9534f" : "#222"
-                                                }}>
+                                                <span
+                                                    style={
+                                                        item.currentEnrolled >= item.capacity
+                                                            ? styles.fullCapacity
+                                                            : styles.normalCapacity
+                                                    }
+                                                >
                                                     {item.currentEnrolled ?? 0}
-                                                </span> 
-                                                <span style={{ color: "#777" }}> / {item.capacity ?? 20}</span>
+                                                </span>
+
+                                                <span style={styles.capacityTotal}>
+                                                    {" "}
+                                                    / {item.capacity ?? 20}
+                                                </span>
                                             </td>
                                         </tr>
                                     ))}
@@ -159,21 +192,140 @@ function TheoryScheduleViewPage() {
 }
 
 const styles = {
-    container: { display: "flex", minHeight: "100vh" },
-    content: { flex: 1, padding: "30px", backgroundColor: "#ffffff", fontFamily: '"Arial", sans-serif', display: "flex", justifyContent: "center" },
-    wireframeBox: { border: "2px solid #333333", padding: "30px 40px", width: "100%", maxWidth: "950px", display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: "#ffffff", boxSizing: "border-box" },
-    mainTitle: { fontSize: "32px", fontWeight: "normal", color: "#222", marginBottom: "25px", marginTop: "0", textAlign: "center" },
-    tabContainer: { display: "flex", border: "2px solid #333333", borderRadius: "6px", marginBottom: "35px", overflow: "hidden", width: "360px", alignSelf: "center" },
-    tabBtn: { flex: 1, padding: "10px", border: "none", backgroundColor: "#ffffff", cursor: "pointer", fontSize: "14px", fontWeight: "bold", fontFamily: "inherit", borderRight: "1px solid #333", textAlign: "center" },
-    activeTabBtn: { backgroundColor: "#9cc2cb", color: "#000000" },
-    errorMessage: { width: "100%", padding: "10px", backgroundColor: "#f8d7da", color: "#721c24", borderRadius: "6px", textAlign: "center", fontSize: "14px", fontWeight: "bold", marginBottom: "15px", border: "1px solid #721c24" },
-    infoMessage: { fontSize: "16px", color: "#555", marginTop: "20px" },
-    tableWrapper: { width: "fit-content", border: "2px solid #333333", borderRadius: "4px", overflow: "hidden", backgroundColor: "#ffffff", alignSelf: "center" },
-    table: { width: "100%", borderCollapse: "collapse", textAlign: "center", fontSize: "14px" },
-    th: { backgroundColor: "#9cc2cb", color: "#000000", padding: "12px 15px", fontWeight: "bold", borderBottom: "2px solid #333333", textTransform: "uppercase", fontSize: "13px", letterSpacing: "0.5px" },
-    tr: { borderBottom: "1px solid #333333", transition: "background-color 0.2s" },
-    td: { padding: "12px 15px", color: "#222", verticalAlign: "middle" },
-    noDataTd: { padding: "30px", textAlign: "center", color: "#888", fontSize: "15px" }
+    container: {
+        display: "flex",
+        minHeight: "100vh",
+        backgroundColor: "#f4f7fb",
+        fontFamily: "Arial"
+    },
+
+    content: {
+        flex: 1,
+        padding: "40px",
+        display: "flex",
+        justifyContent: "center"
+    },
+
+    mainCard: {
+        width: "100%",
+        maxWidth: "1000px",
+        backgroundColor: "white",
+        borderRadius: "12px",
+        boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
+        padding: "40px",
+        boxSizing: "border-box"
+    },
+
+    mainTitle: {
+        textAlign: "center",
+        color: "#1e3c72",
+        marginTop: 0,
+        marginBottom: "30px",
+        fontSize: "32px"
+    },
+
+    tabContainer: {
+        display: "flex",
+        justifyContent: "center",
+        gap: "12px",
+        marginBottom: "30px"
+    },
+
+    tabBtn: {
+        padding: "10px 18px",
+        border: "1px solid #d9d9d9",
+        borderRadius: "8px",
+        backgroundColor: "white",
+        cursor: "pointer",
+        fontSize: "14px",
+        fontWeight: "bold"
+    },
+
+    activeTabBtn: {
+        backgroundColor: "#1e3c72",
+        color: "white",
+        border: "1px solid #1e3c72"
+    },
+
+    errorMessage: {
+        width: "100%",
+        padding: "12px",
+        backgroundColor: "#ffecec",
+        color: "#b00020",
+        borderRadius: "8px",
+        textAlign: "center",
+        fontSize: "14px",
+        fontWeight: "bold",
+        marginBottom: "20px",
+        border: "1px solid #d9534f",
+        boxSizing: "border-box"
+    },
+
+    infoCard: {
+        backgroundColor: "white",
+        padding: "25px",
+        borderRadius: "12px",
+        boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
+        color: "#333",
+        textAlign: "center"
+    },
+
+    tableWrapper: {
+        width: "100%",
+        overflowX: "auto",
+        borderRadius: "12px",
+        border: "1px solid #e6e6e6",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+    },
+
+    table: {
+        width: "100%",
+        borderCollapse: "collapse",
+        textAlign: "center",
+        fontSize: "14px",
+        backgroundColor: "white"
+    },
+
+    th: {
+        backgroundColor: "#1e3c72",
+        color: "white",
+        padding: "14px 15px",
+        fontWeight: "bold",
+        textTransform: "uppercase",
+        fontSize: "13px",
+        letterSpacing: "0.5px"
+    },
+
+    tr: {
+        borderBottom: "1px solid #e6e6e6"
+    },
+
+    td: {
+        padding: "14px 15px",
+        color: "#333",
+        verticalAlign: "middle"
+    },
+
+    fullCapacity: {
+        fontWeight: "bold",
+        color: "#b00020"
+    },
+
+    normalCapacity: {
+        fontWeight: "bold",
+        color: "#1e3c72"
+    },
+
+    capacityTotal: {
+        color: "#777"
+    },
+
+    noDataTd: {
+        padding: "30px",
+        textAlign: "center",
+        color: "gray",
+        fontSize: "15px"
+    }
 };
 
 export default TheoryScheduleViewPage;

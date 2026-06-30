@@ -1,10 +1,13 @@
 package com.autoskola.demo.model;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Timer;
 
 @Entity
 @Table(name = "theory_tests")
@@ -28,6 +31,8 @@ public class TheoryTest {
     private LocalDateTime startedAt;
 
     private LocalDateTime submittedAt;
+
+    private Integer timePerFinalExam;
 
     private Integer score;
 

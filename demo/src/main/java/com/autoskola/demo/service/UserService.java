@@ -14,4 +14,5 @@ public interface UserService {
     AdminProfileDto getAdminProfile(HttpSession session);
     ProfessorProfileDto getProfessorProfile(HttpSession session);
     List<ProfessorProfileDto> getAllProfessors();
+    String updateProfile(UpdateUserDto dto, HttpSession session);
 }

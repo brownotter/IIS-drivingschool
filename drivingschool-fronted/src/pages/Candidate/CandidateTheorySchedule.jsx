@@ -1,47 +1,69 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../../components/Sidebar"; 
-import CandidateTheoryClassDetails from "./CandidateTheoryClassDetails"; 
+import Sidebar from "../../components/Sidebar";
+import CandidateTheoryClassDetails from "./CandidateTheoryClassDetails";
 
 function CandidateTheorySchedule() {
     const navigate = useNavigate();
+
     const [schedule, setSchedule] = useState([]);
     const [timeSlots, setTimeSlots] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedClass, setSelectedClass] = useState(null); 
+    const [selectedClass, setSelectedClass] = useState(null);
+    const [errorMessage, setErrorMessage] = useState("");
 
-    const user = JSON.parse(localStorage.getItem("user")) || { id: 1 }; 
+    const user = JSON.parse(localStorage.getItem("user")) || { id: 1 };
     const candidateId = user.id;
 
-    const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const daysOfWeek = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+    ];
 
     const dayMap = {
-        1: "Monday", 2: "Tuesday", 3: "Wednesday", 
-        4: "Thursday", 5: "Friday", 6: "Saturday", 0: "Sunday"
+        1: "Monday",
+        2: "Tuesday",
+        3: "Wednesday",
+        4: "Thursday",
+        5: "Friday"
     };
 
     const formatSlotDisplay = (timeStr) => {
         if (!timeStr) return "";
+
         const parts = timeStr.split(":");
         const hour = parseInt(parts[0], 10);
         const minute = parts[1] || "00";
-        const ampm = hour >= 12 ? "PM" : "AM";
-        const formattedHour = hour < 10 ? `0${hour}` : hour;
-        return `${formattedHour}:${minute} ${ampm}`;
+
+        return `${String(hour).padStart(2, "0")}:${minute}`;
     };
 
     const loadSchedule = () => {
         setLoading(true);
+        setErrorMessage("");
+
         fetch(`http://localhost:8080/api/theory-classes/candidate/${candidateId}`)
-            .then((res) => res.json())
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Failed to load schedule.");
+                }
+
+                return res.json();
+            })
             .then((data) => {
-                console.log("Raspored uspešno učitan:", data);
                 const classList = Array.isArray(data) ? data : [];
                 setSchedule(classList);
 
-                const rawTimes = classList.map(c => {
-                    return c.theoryStartTime ? c.theoryStartTime.substring(0, 5) : null;
-                }).filter(Boolean);
+                const rawTimes = classList
+                    .map((c) =>
+                        c.theoryStartTime
+                            ? c.theoryStartTime.substring(0, 5)
+                            : null
+                    )
+                    .filter(Boolean);
 
                 const uniqueTimes = [...new Set(rawTimes)];
                 uniqueTimes.sort((a, b) => a.localeCompare(b));
@@ -56,6 +78,7 @@ function CandidateTheorySchedule() {
             })
             .catch((err) => {
                 console.error("Error loading schedule:", err);
+                setErrorMessage("Schedule could not be loaded.");
                 setLoading(false);
             });
     };
@@ -68,7 +91,10 @@ function CandidateTheorySchedule() {
         return schedule.find((c) => {
             const dateObj = new Date(c.theoryDate);
             const classDay = dayMap[dateObj.getDay()];
-            const classStart = c.theoryStartTime ? c.theoryStartTime.substring(0, 5) : "";
+            const classStart = c.theoryStartTime
+                ? c.theoryStartTime.substring(0, 5)
+                : "";
+
             return classDay === dayName && classStart === timeSlot;
         });
     };
@@ -98,68 +124,111 @@ function CandidateTheorySchedule() {
             />
 
             <div style={styles.content}>
-                <div style={styles.wireframeBox}>
-                    <h1 style={styles.mainTitle}>Your theory schedule</h1>
+                <div style={styles.mainCard}>
+                    <h1 style={styles.mainTitle}>Your Theory Schedule</h1>
 
-                    {loading ? (
-                        <div style={styles.loadingText}>Loading schedule...</div>
-                    ) : (
-                        <div style={styles.tableWrapper}>
-                            <table style={styles.table}>
-                                <thead>
-                                    <tr>
-                                        <th style={styles.timeHeaderCell}>Time</th>
-                                        {daysOfWeek.map((day) => (
-                                            <th key={day} style={styles.headerCell}>{day}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {timeSlots.map((slot) => (
-                                        <tr key={slot}>
-                                            <td style={styles.timeCell}>
-                                                {formatSlotDisplay(slot)}
-                                            </td>
-                                            
-                                            {daysOfWeek.map((day) => {
-                                                const theoryClass = getCellClass(day, slot);
-                                                return (
-                                                    <td key={day} style={styles.gridCell}>
-                                                        {theoryClass && (
-                                                            <div 
-                                                                style={{
-                                                                    ...styles.classCard,
-                                                                    backgroundColor: theoryClass.status === "ENROLLED" ? "#9cc2cb" : "#c4dbdf"
-                                                                }}
-                                                                onClick={() => handleClassClick(theoryClass)}
-                                                            >
-                                                                <span style={styles.cardTitle}>Theory</span>
-                                                                <span style={styles.cardSubtitle}>class</span>
-                                                                <span style={styles.cardStatus}>
-                                                                    {theoryClass.status === "ENROLLED" ? "ENROLLED" : "AVAILABLE"}
-                                                                </span>
-                                                                {theoryClass.domainName && (
-                                                                    <span style={styles.cardDomain}>{theoryClass.domainName}</span>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                );
-                                            })}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                    {loading && (
+                        <div style={styles.infoCard}>
+                            Loading schedule...
                         </div>
+                    )}
+
+                    {!loading && errorMessage && (
+                        <div style={styles.errorCard}>
+                            {errorMessage}
+                        </div>
+                    )}
+
+                    {!loading && !errorMessage && (
+                        <>
+                            <div style={styles.legendRow}>
+                                <div style={styles.legendItem}>
+                                    <span style={styles.enrolledDot}></span>
+                                    Enrolled
+                                </div>
+
+                                <div style={styles.legendItem}>
+                                    <span style={styles.availableDot}></span>
+                                    Available
+                                </div>
+                            </div>
+
+                            <div style={styles.tableWrapper}>
+                                <table style={styles.table}>
+                                    <thead>
+                                        <tr>
+                                            <th style={styles.timeHeaderCell}>Time</th>
+
+                                            {daysOfWeek.map((day) => (
+                                                <th key={day} style={styles.headerCell}>
+                                                    {day}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {timeSlots.map((slot) => (
+                                            <tr key={slot} style={styles.tr}>
+                                                <td style={styles.timeCell}>
+                                                    {formatSlotDisplay(slot)}
+                                                </td>
+
+                                                {daysOfWeek.map((day) => {
+                                                    const theoryClass =
+                                                        getCellClass(day, slot);
+
+                                                    return (
+                                                        <td key={day} style={styles.gridCell}>
+                                                            {theoryClass ? (
+                                                                <div
+                                                                    style={{
+                                                                        ...styles.classCard,
+                                                                        ...(theoryClass.status === "ENROLLED"
+                                                                            ? styles.enrolledClassCard
+                                                                            : styles.availableClassCard)
+                                                                    }}
+                                                                    onClick={() =>
+                                                                        handleClassClick(theoryClass)
+                                                                    }
+                                                                >
+                                                                    <span style={styles.cardTitle}>
+                                                                        Theory Class
+                                                                    </span>
+
+                                                                    <span style={styles.cardStatus}>
+                                                                        {theoryClass.status === "ENROLLED"
+                                                                            ? "ENROLLED"
+                                                                            : "AVAILABLE"}
+                                                                    </span>
+
+                                                                    {theoryClass.domainName && (
+                                                                        <span style={styles.cardDomain}>
+                                                                            {theoryClass.domainName}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <span style={styles.emptySlot}></span>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
                     )}
                 </div>
             </div>
 
             {selectedClass && (
-                <CandidateTheoryClassDetails 
+                <CandidateTheoryClassDetails
                     theoryClass={selectedClass}
-                    onClose={() => setSelectedClass(null)} 
-                    onRefreshSchedule={loadSchedule} 
+                    onClose={() => setSelectedClass(null)}
+                    onRefreshSchedule={loadSchedule}
                 />
             )}
         </div>
@@ -167,35 +236,204 @@ function CandidateTheorySchedule() {
 }
 
 const styles = {
-    container: { display: "flex", minHeight: "100vh", backgroundColor: "#f9f9f9" },
-    content: { flex: 1, padding: "30px", backgroundColor: "#ffffff", fontFamily: '"Arial", sans-serif', display: "flex", justifyContent: "center" },
-    wireframeBox: { border: "2px solid #333333", padding: "40px", width: "100%", maxWidth: "1000px", display: "flex", flexDirection: "column", backgroundColor: "#ffffff", boxSizing: "border-box" },
-    mainTitle: { fontSize: "36px", fontWeight: "normal", color: "#222", marginBottom: "35px", marginTop: "0", textAlign: "center", textDecoration: "underline" },
-    loadingText: { textAlign: "center", padding: "40px", fontSize: "18px", color: "#666" },
-    tableWrapper: { width: "100%", overflowX: "auto", border: "2px solid #333333" },
-    table: { width: "100%", borderCollapse: "collapse", backgroundColor: "#ffffff" },
-    headerCell: { border: "1px solid #333333", padding: "12px 8px", fontSize: "16px", fontWeight: "normal", textAlign: "center", minWidth: "110px" },
-    timeHeaderCell: { border: "1px solid #333333", padding: "12px 8px", fontSize: "16px", fontWeight: "normal", textAlign: "center", backgroundColor: "#eaeaea", width: "100px" },
-    timeCell: { border: "1px solid #333333", padding: "20px 10px", fontSize: "16px", textAlign: "center", backgroundColor: "#eaeaea", fontWeight: "500", verticalAlign: "middle" },
-    gridCell: { border: "1px solid #333333", padding: "10px", width: "120px", height: "130px", verticalAlign: "top", backgroundColor: "#fdffdf" },
-    classCard: {
-        border: "2px solid #333333",
+    container: {
+        display: "flex",
+        minHeight: "100vh",
+        backgroundColor: "#f4f7fb",
+        fontFamily: "Arial"
+    },
+
+    content: {
+        flex: 1,
+        padding: "40px",
+        display: "flex",
+        justifyContent: "center"
+    },
+
+    mainCard: {
+        width: "100%",
+        maxWidth: "1100px",
+        backgroundColor: "white",
         borderRadius: "12px",
-        padding: "12px 6px",
+        boxShadow: "0 5px 15px rgba(0,0,0,0.08)",
+        padding: "40px",
+        boxSizing: "border-box"
+    },
+
+    mainTitle: {
+        textAlign: "center",
+        color: "#1e3c72",
+        marginTop: 0,
+        marginBottom: "30px",
+        fontSize: "32px"
+    },
+
+    infoCard: {
+        backgroundColor: "#f4f7fb",
+        padding: "25px",
+        borderRadius: "12px",
+        color: "#333",
+        textAlign: "center",
+        border: "1px solid #e6e6e6"
+    },
+
+    errorCard: {
+        width: "100%",
+        padding: "12px",
+        backgroundColor: "#ffecec",
+        color: "#b00020",
+        borderRadius: "8px",
+        textAlign: "center",
+        fontSize: "14px",
+        fontWeight: "bold",
+        marginBottom: "20px",
+        border: "1px solid #d9534f",
+        boxSizing: "border-box"
+    },
+
+    legendRow: {
+        display: "flex",
+        justifyContent: "center",
+        gap: "25px",
+        marginBottom: "25px",
+        color: "#333",
+        fontSize: "14px",
+        fontWeight: "bold"
+    },
+
+    legendItem: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px"
+    },
+
+    enrolledDot: {
+        width: "14px",
+        height: "14px",
+        borderRadius: "50%",
+        backgroundColor: "#394ea4",
+        display: "inline-block"
+    },
+
+    availableDot: {
+        width: "14px",
+        height: "14px",
+        borderRadius: "50%",
+        backgroundColor: "#93edcf",
+        display: "inline-block"
+    },
+
+    tableWrapper: {
+        width: "100%",
+        overflowX: "auto",
+        borderRadius: "12px",
+        border: "1px solid #e6e6e6",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+    },
+
+    table: {
+        width: "100%",
+        borderCollapse: "collapse",
+        backgroundColor: "white",
+        textAlign: "center",
+        fontSize: "14px"
+    },
+
+    headerCell: {
+        backgroundColor: "#1e3c72",
+        color: "white",
+        padding: "14px 10px",
+        fontWeight: "bold",
+        minWidth: "120px",
+        textTransform: "uppercase",
+        fontSize: "13px",
+        letterSpacing: "0.5px"
+    },
+
+    timeHeaderCell: {
+        backgroundColor: "#1e3c72",
+        color: "white",
+        padding: "14px 10px",
+        fontWeight: "bold",
+        width: "100px",
+        textTransform: "uppercase",
+        fontSize: "13px",
+        letterSpacing: "0.5px"
+    },
+
+    tr: {
+        borderBottom: "1px solid #e6e6e6"
+    },
+
+    timeCell: {
+        padding: "18px 10px",
+        fontSize: "15px",
+        textAlign: "center",
+        backgroundColor: "#f4f7fb",
+        fontWeight: "bold",
+        color: "#1e3c72",
+        verticalAlign: "middle"
+    },
+
+    gridCell: {
+        padding: "12px",
+        width: "120px",
+        height: "120px",
+        verticalAlign: "middle",
+        backgroundColor: "#ffffff",
+        borderLeft: "1px solid #f0f0f0"
+    },
+
+    classCard: {
+        borderRadius: "12px",
+        padding: "12px 8px",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
         userSelect: "none",
-        boxShadow: "2px 2px 0px #333333",
         height: "100%",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
+        boxShadow: "0 3px 8px rgba(0,0,0,0.08)",
+        transition: "0.2s"
     },
-    cardTitle: { fontSize: "16px", fontWeight: "bold", color: "#222" },
-    cardSubtitle: { fontSize: "13px", color: "#333", marginBottom: "4px" },
-    cardStatus: { fontSize: "11px", fontWeight: "bold", letterSpacing: "0.5px", textDecoration: "underline", color: "#000" },
-    cardDomain: { fontSize: "10px", color: "#555", marginTop: "4px", fontStyle: "italic", textAlign: "center" }
+
+    enrolledClassCard: {
+        backgroundColor: "#394ea4",
+        color: "white"
+    },
+
+    availableClassCard: {
+        backgroundColor: "#93edcf",
+        color: "#1e3c72",
+        border: "1px solid #d9e6f7"
+    },
+
+    cardTitle: {
+        fontSize: "15px",
+        fontWeight: "bold",
+        marginBottom: "6px"
+    },
+
+    cardStatus: {
+        fontSize: "11px",
+        fontWeight: "bold",
+        letterSpacing: "0.5px",
+        marginBottom: "5px"
+    },
+
+    cardDomain: {
+        fontSize: "11px",
+        marginTop: "4px",
+        textAlign: "center",
+        opacity: 0.9
+    },
+
+    emptySlot: {
+        color: "#c7c7c7",
+        fontSize: "18px"
+    }
 };
 
 export default CandidateTheorySchedule;
