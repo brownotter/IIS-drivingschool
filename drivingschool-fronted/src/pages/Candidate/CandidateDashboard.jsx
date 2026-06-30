@@ -4,17 +4,22 @@ import Sidebar from "../../components/Sidebar";
 
 import {
     getCandidateProfile,
-    updateCandidateProfile
+    updateCandidateProfile,
+    getRecommendation,
+    acceptRecommendation,
+    declineRecommendation
 } from "../../services/candidateService";
 
 
 function CandidateDashboard() {
     const navigate = useNavigate();
 
+    const [recommendation, setRecommendation] = useState(null);
+
     const [profile, setProfile] = useState(null);
 
     const [editMode, setEditMode] = useState(false);
-
+ 
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -28,6 +33,7 @@ function CandidateDashboard() {
     useEffect(() => {
 
         loadProfile();
+        loadRecommendation();
 
     }, []);
 
@@ -54,6 +60,28 @@ function CandidateDashboard() {
             navigate("/");
         }
     };
+
+    const loadRecommendation = async () => {
+
+    try {
+        const data = await getRecommendation();
+        setRecommendation(data);
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+const handleAcceptRecommendation = async () => {
+
+    await acceptRecommendation();
+    loadRecommendation();
+};
+
+const handleDeclineRecommendation = async () => {
+
+    await declineRecommendation();
+    loadRecommendation();
+};
 
     const handleChange = (e) => {
 
@@ -89,7 +117,6 @@ function CandidateDashboard() {
 
 const logout = async () => {
 
-    //dodala logout logiku
     await fetch(
         "http://localhost:8080/user/logout",
         {
@@ -136,12 +163,12 @@ const logout = async () => {
 
         {
             label: "Theory Simulation",
-            onClick: () => {}
+            onClick: () => navigate("/candidate/theory-simulation")
         },
 
         {
             label: "Theory Exam",
-            onClick: () => {}
+            onClick: () => navigate("/candidate/theory-exam")
         },
 
         {
@@ -321,28 +348,77 @@ const logout = async () => {
 
                         <div style={styles.card}>
 
-                            <h2>
-                                Areas to improve
-                            </h2>
+    <h2>
+        Areas to improve
+    </h2>
 
-                            <p>
-                                No areas detected yet.
-                            </p>
+    {
+        recommendation?.visible ? (
 
-                        </div>
+            <ul>
+                <li>
+                    {recommendation.weakness}
+                </li>
+            </ul>
+
+        ) : (
+
+            <p>
+                No areas detected yet.
+            </p>
+        )
+    }
+
+</div>
 
 
-                        <div style={styles.card}>
+                       <div style={styles.card}>
 
-                            <h2>
-                                Recommendations
-                            </h2>
+    <div style={styles.card}>
 
-                            <p>
-                                No active recommendations.
-                            </p>
+    <h2>
+        Recommendations
+    </h2>
 
-                        </div>
+    {
+        recommendation?.visible ? (
+
+            <>
+
+                <p>
+                    Based on your recent driving performance,
+                    we recommend an additional lesson focused on
+                    {" "}
+                    {recommendation.weakness}.
+                </p>
+
+                <button
+                    onClick={handleAcceptRecommendation}
+                    style={styles.acceptBtn}
+                >
+                    Accept
+                </button>
+
+                <button
+                    onClick={handleDeclineRecommendation}
+                    style={styles.declineBtn}
+                >
+                    Decline
+                </button>
+
+            </>
+
+        ) : (
+
+            <p>
+                No active recommendations.
+            </p>
+        )
+    }
+
+</div>
+
+</div>
                     </>
                 )
             }
@@ -396,6 +472,27 @@ const styles = {
     color: "white",
     fontWeight: "bold",
     cursor: "pointer"
+},
+
+acceptBtn: {
+    backgroundColor: "#4e8948",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    padding: "10px 18px",
+    cursor: "pointer",
+    fontWeight: "bold"
+},
+
+declineBtn: {
+    backgroundColor: "#dc3545",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    padding: "10px 18px",
+    cursor: "pointer",
+    fontWeight: "bold",
+    marginLeft: "10px"
 },
 
     logo: {
@@ -492,6 +589,8 @@ const styles = {
         borderRadius: "8px",
         color: "#155724"
     }
+
+    
 
  
 };

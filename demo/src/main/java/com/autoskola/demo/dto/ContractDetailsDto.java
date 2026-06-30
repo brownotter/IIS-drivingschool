@@ -18,4 +18,5 @@ public class ContractDetailsDto {
     private LocalDate contStartDate;
     private BigDecimal ammountCont;
     private String documentType = "CONTRACT";
+    private String candidateName;
 }

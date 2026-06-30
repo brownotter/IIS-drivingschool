@@ -23,7 +23,10 @@ export const createMedicalExam = async (candidateId, employeeId, data) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error("Failed to create document.");
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create document.");
+    }
     return response.json();
 };
 
@@ -34,7 +37,10 @@ export const createCertificate = async (candidateId, employeeId, data) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error("Failed to create document.");
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create document.");
+    }
     return response.json();
 };
 
@@ -45,7 +51,10 @@ export const createContract = async (candidateId, employeeId, data) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error("Failed to create document.");
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create document.");
+    }
     return response.json();
 };
 
@@ -56,7 +65,10 @@ export const createExamResult = async (candidateId, employeeId, data) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     });
-    if (!response.ok) throw new Error("Failed to create document.");
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create document.");
+    }
     return response.json();
 };
 
@@ -167,4 +179,47 @@ export const restoreDocumentVersion = async (documentId, versionId) => {
     );
     if (!response.ok) throw new Error("Failed to restore version.");
     return response.json();
+};
+
+export const archiveDocument = async (documentId, comment) => {
+    const params = comment ? `?comment=${encodeURIComponent(comment)}` : "";
+    const response = await fetch(
+        `http://localhost:8080/documents/${documentId}/archive${params}`,
+        {
+            method: "PUT",
+            credentials: "include"
+        }
+    );
+    if (!response.ok) throw new Error("Failed to archive document.");
+    return response.json();
+};
+
+export const getAllArchivedDocuments = async () => {
+    const response = await fetch(
+        "http://localhost:8080/documents/archived",
+        { credentials: "include" }
+    );
+    if (!response.ok) throw new Error("Failed to fetch archived documents.");
+    return response.json();
+};
+
+export const unarchiveDocument = async (documentId) => {
+    const response = await fetch(
+        `http://localhost:8080/documents/${documentId}/unarchive`,
+        {
+            method: "PUT",
+            credentials: "include"
+        }
+    );
+    if (!response.ok) throw new Error("Failed to unarchive document.");
+    return response.json();
+};
+
+export const downloadCandidateReport = async (candidateId) => {
+    const response = await fetch(
+        `http://localhost:8080/documents/report/candidate/${candidateId}`,
+        { credentials: "include" }
+    );
+    if (!response.ok) throw new Error("Failed to generate report.");
+    return response.blob();
 };

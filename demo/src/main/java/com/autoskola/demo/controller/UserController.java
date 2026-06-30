@@ -64,4 +64,15 @@ public class UserController {
     public ResponseEntity<List<ProfessorProfileDto>> getAllProfessors() {
         return ResponseEntity.ok(userService.getAllProfessors());
     }
+
+    @PutMapping("/update")
+    public ResponseEntity<String> updateProfile(
+            @RequestBody UpdateUserDto dto,
+            HttpSession session
+    ) {
+
+        return ResponseEntity.ok(
+                userService.updateProfile(dto, session)
+        );
+    }
 }

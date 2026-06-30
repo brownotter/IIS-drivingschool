@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import { getAllCandidates } from "../../services/candidateService";
+import { downloadCandidateReport } from "../../services/documentService";
 
 function CandidatesPage() {
     const navigate = useNavigate();
@@ -30,6 +31,20 @@ function CandidatesPage() {
             .toLowerCase()
             .includes(search.toLowerCase())
     );
+
+    const handleDownloadReport = async (candidateId, candidateName) => {
+        try {
+            const blob = await downloadCandidateReport(candidateId);
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `report_${candidateName}.pdf`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
@@ -101,6 +116,12 @@ function CandidatesPage() {
                                                 onClick={() => navigate(`/employee/candidates/${c.id}/documents`)}
                                             >
                                                 All documents
+                                            </button>
+                                            <button
+                                                style={styles.reportBtn}
+                                                onClick={() => handleDownloadReport(c.id, `${c.firstName}_${c.lastName}`)}
+                                            >
+                                                Completeness report
                                             </button>
                                         </td>
                                     </tr>
@@ -183,6 +204,15 @@ const styles = {
         padding: "40px",
         color: "#888",
         fontSize: "15px"
+    },
+    reportBtn: {
+    padding: "6px 14px",
+    backgroundColor: "white",
+    color: "#1e3c72",
+    border: "1px solid #1e3c72",
+    borderRadius: "6px",
+    fontSize: "13px",
+    cursor: "pointer"
     }
 };
 

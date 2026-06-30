@@ -3,6 +3,7 @@ package com.autoskola.demo.service.impl;
 import com.autoskola.demo.dto.NotificationDto;
 import com.autoskola.demo.model.Candidate;
 import com.autoskola.demo.model.Notification;
+import com.autoskola.demo.model.Role;
 import com.autoskola.demo.model.User;
 import com.autoskola.demo.repository.CandidateRepository;
 import com.autoskola.demo.repository.NotificationRepository;
@@ -45,22 +46,34 @@ public class NotificationServiceImpl
     }
 
     @Override
-    public List<NotificationDto> getMyNotifications(
-            HttpSession session
-    ) {
+    public List<NotificationDto> getMyNotifications(HttpSession session) {
 
         User sessionUser =
                 (User) session.getAttribute("user");
 
-        Candidate candidate =
-                candidateRepository
-                        .findById(sessionUser.getId())
-                        .orElseThrow();
+        List<Notification> notifications;
 
-        return notificationRepository
-                .findByCandidateIdOrderByCreatedAtDesc(
-                        candidate.getId()
-                )
+        if (sessionUser.getRole() == Role.PROFESSOR) {
+
+            notifications = notificationRepository
+                    .findByUserIdOrderByCreatedAtDesc(
+                            sessionUser.getId()
+                    );
+
+        } else {
+
+            Candidate candidate =
+                    candidateRepository
+                            .findById(sessionUser.getId())
+                            .orElseThrow();
+
+            notifications = notificationRepository
+                    .findByCandidateIdOrderByCreatedAtDesc(
+                            candidate.getId()
+                    );
+        }
+
+        return notifications
                 .stream()
                 .map(notification ->
                         NotificationDto.builder()
@@ -87,5 +100,19 @@ public class NotificationServiceImpl
         notificationRepository.save(notification);
 
         return "Notification marked as read.";
+    }
+
+    @Override
+    public void createProfessorsNotification(User user, String title, String message) {
+        Notification notification =
+                Notification.builder()
+                        .user(user)
+                        .title(title)
+                        .message(message)
+                        .createdAt(LocalDateTime.now())
+                        .read(false)
+                        .build();
+
+        notificationRepository.save(notification);
     }
 }

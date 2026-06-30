@@ -1,7 +1,6 @@
 package com.autoskola.demo.controller;
 
 import com.autoskola.demo.dto.*;
-import com.autoskola.demo.model.TheoryClass;
 import com.autoskola.demo.service.TheoryClassService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +18,6 @@ public class TheoryClassController {
     public ResponseEntity<String> createTheoryClass(@RequestBody CreateTheoryClassDto dto) {
         theoryClassService.createTheoryClass(dto);
         return ResponseEntity.ok("Čas je uspešno kreiran!");
-    }
-
-    @PostMapping("/auto-generate")
-    public ResponseEntity<String> autoGenerateSchedule(@RequestBody AutoGenerateTheoryScheduleDto dto) {
-        theoryClassService.autoGenerateSchedule(dto);
-        return ResponseEntity.ok("Automatski raspored je uspešno generisan na osnovu slobodnih termina profesora!");
     }
 
     @GetMapping("/admin-weekly-schedule")
@@ -65,7 +58,7 @@ public class TheoryClassController {
     }
 
     @GetMapping("/domains")
-    public ResponseEntity<List<DomainDto>> getAllProfessors() {
+    public ResponseEntity<List<DomainDto>> getAllDomains() {
         return ResponseEntity.ok(theoryClassService.getAllDomains());
     }
 }

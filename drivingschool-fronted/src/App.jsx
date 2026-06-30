@@ -16,6 +16,7 @@ import EditDocumentPage from "./pages/Employee/EditDocumentPage";
 import CandidatesPage from "./pages/Employee/CandidatesPage";
 import CandidateDocumentsPage from "./pages/Employee/CandidateDocumentsPage";
 import AlertsPage from "./pages/Employee/AlertsPage";
+import ArchivePage from "./pages/Employee/ArchivePage";
 import ProfessorDashboard from "./pages/Professor/ProfessorDashboard";
 import ProfessorSchedule from "./pages/Professor/ProfessorSchedule";
 import ProfessorClassDetails from "./pages/Professor/ProfessorClassDetails";
@@ -29,7 +30,16 @@ import InstructorProfile from "./pages/Instructor/InstructorDashboard";
 import InstructorVehicles from "./pages/Instructor/InstructorVehicles";
 import CandidateNotifications from "./pages/Candidate/CandidateNotifications";
 import CandidateFinancials from "./pages/Candidate/CandidateFinancials";
+import CandidateTheorySimulation from "./pages/Candidate/CandidateTheorySimulation";
+import CandidateTheoryExam from "./pages/Candidate/CandidateTheoryExam";
 import InstructorCandidates from "./pages/Instructor/InstructorCandidates";
+import TheorySimulationTest from "./pages/Candidate/TheorySimulationTest";
+import TheorySimulationTests from "./pages/Candidate/TheorySimulationTest";
+import TheorySimulationTestResults from "./pages/Candidate/TheorySimulationTestResults";
+import TheoryFinalExam from "./pages/Candidate/TheoryFinalExam";
+import TheoryFinalExamResults from "./pages/Candidate/TheoryFinalExamResults";
+import ProfessorNotifications from "./pages/Professor/ProfessorNotifications";
+import Professors from "./pages/Admin/Professors";
 
 function App() {
 
@@ -87,6 +97,39 @@ function App() {
                 element={<CandidateTheorySchedule />}
             />
 
+            
+            <Route
+                path="/candidate/theory-simulation"
+                element={<CandidateTheorySimulation />}
+            />
+
+            <Route
+                path="/candidate/theory-simulation/start-test/:testId"
+                element={<TheorySimulationTests />}
+            />  
+
+            <Route
+                path="/candidate/theory-simulation/result/:testId"
+                element={<TheorySimulationTestResults />}
+            />
+
+
+            <Route
+                path="/candidate/theory-exam/start-test/:testId"
+                element={<TheoryFinalExam />}
+            />
+
+            <Route
+                path="/candidate/theory-exam/result/:testId"
+                element={<TheoryFinalExamResults />}
+            />
+
+
+            <Route
+                path="/candidate/theory-exam"
+                element={<CandidateTheoryExam />}
+            />
+
             <Route
                 path="/professor/dashboard"
                 element={<ProfessorDashboard />}
@@ -105,6 +148,11 @@ function App() {
             <Route
                 path="/professor/availability"
                 element={<ProfessorMyAvailability />}
+            />
+
+            <Route
+                path="/professor/notifications"
+                element={<ProfessorNotifications />}
             />
 
             <Route
@@ -152,6 +200,11 @@ function App() {
                 element={<AlertsPage />}
             />
 
+            <Route 
+                path="/employee/archive" 
+                element={<ArchivePage />} 
+            />
+
                 <Route 
                     path="/admin/vehicles" 
                     element={<Vehicles />} />
@@ -159,6 +212,11 @@ function App() {
                 <Route 
                     path="/admin/instructors" 
                     element={<Instructors />} />
+
+                <Route
+                    path="/admin/professors"
+                    element={<Professors />}
+                />
 
                 // Instructor routes
                 <Route

@@ -11,10 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.temporal.TemporalAdjusters;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,40 +30,68 @@ public class TheoryClassServiceImpl implements TheoryClassService {
     @Override
     public void createTheoryClass(CreateTheoryClassDto dto) {
 
-        User professor = userRepository.findById(dto.getProfessorId()).orElseThrow(() -> new RuntimeException("Professor not found"));
+        User professor = getProfessor(dto.getProfessorId());
+        Domain domain = getDomain(dto.getDomainId());
+        checkProfessorAvailability(professor, dto);
+        checkProfessorClassOverlap(professor, dto.getTheoryDate(), dto.getTheoryStartTime(), dto.getTheoryEndTime());
 
+        TheoryClass theoryClass = createTheoryClassObject(dto, professor, domain);
+        TheoryClass savedClass = theoryClassRepository.save(theoryClass);
+        enrollInitialCandidates(savedClass, dto.getCandidateIds());
+        theoryClassRepository.save(savedClass);
+        sendNotificationToProfessor(professor, savedClass);
+    }
+
+    private void sendNotificationToProfessor(User professor, TheoryClass theoryClass){
+        notificationService.createProfessorsNotification(professor,
+                "Theory class scheduled",
+                "You have new theory class on "
+                        + theoryClass.getTheoryDate()
+                        + " at "
+                        + theoryClass.getTheoryStartTime());
+    }
+
+    private User getProfessor(Long professorId) {
+
+        User professor = userRepository.findById(professorId).orElseThrow(() -> new RuntimeException("Professor not found"));
         if (professor.getRole() != Role.PROFESSOR) {
             throw new RuntimeException("User is not a professor");
         }
+        return professor;
+    }
 
-        Domain domain = domainRepository.findById(dto.getDomainId()).orElseThrow(() -> new RuntimeException("Domain not found"));
+    private Domain getDomain(Long domainId) {
+        return domainRepository.findById(domainId).orElseThrow(() -> new RuntimeException("Domain not found"));
+    }
 
-        boolean hasAvailability = availabilityRepository.findByProfessorAndAvailableDateBetween(
-                                professor, dto.getTheoryDate(), dto.getTheoryDate())
-                        .stream()
-                            .anyMatch(a ->
-                                !dto.getTheoryStartTime().isBefore(a.getStartTime())
-                                        && !dto.getTheoryEndTime().isAfter(a.getEndTime())
-                        );
+    private void checkProfessorAvailability(User professor, CreateTheoryClassDto dto) {
 
+        List<ProfessorAvailability> availabilities = availabilityRepository.getProfessorAvailabilitiesForPeriod(professor, dto.getTheoryDate(), dto.getTheoryDate());
+        boolean hasAvailability = false;
+        for (ProfessorAvailability availability : availabilities) {
+            boolean startsAfterAvailability = !dto.getTheoryStartTime().isBefore(availability.getStartTime());
+            boolean endsBeforeAvailability = !dto.getTheoryEndTime().isAfter(availability.getEndTime());
+            if (startsAfterAvailability && endsBeforeAvailability) {
+                hasAvailability = true;
+                break;
+            }
+        }
         if (!hasAvailability) {
             throw new RuntimeException("Professor is not available");
         }
+    }
 
-        boolean overlap = theoryClassRepository
-                        .existsByProfessorAndTheoryDateAndTheoryStartTimeLessThanAndTheoryEndTimeGreaterThan(
-                                professor,
-                                dto.getTheoryDate(),
-                                dto.getTheoryEndTime(),
-                                dto.getTheoryStartTime()
-                        );
+    private void checkProfessorClassOverlap(User professor, LocalDate date, java.time.LocalTime startTime, java.time.LocalTime endTime) {
 
+        boolean overlap = theoryClassRepository.hasOverlappingClass(professor, date, endTime, startTime);
         if (overlap) {
             throw new RuntimeException("Professor already has class");
         }
+    }
+
+    private TheoryClass createTheoryClassObject(CreateTheoryClassDto dto, User professor, Domain domain) {
 
         TheoryClass theoryClass = new TheoryClass();
-
         theoryClass.setTheoryDate(dto.getTheoryDate());
         theoryClass.setTheoryStartTime(dto.getTheoryStartTime());
         theoryClass.setTheoryEndTime(dto.getTheoryEndTime());
@@ -72,282 +99,184 @@ public class TheoryClassServiceImpl implements TheoryClassService {
         theoryClass.setCurrentEnrolled(0);
         theoryClass.setProfessor(professor);
         theoryClass.setDomain(domain);
-
         theoryClass.setAttendances(new ArrayList<>());
+        return theoryClass;
+    }
 
-        TheoryClass savedClass = theoryClassRepository.save(theoryClass);
+    private void enrollInitialCandidates(TheoryClass theoryClass, List<Long> candidateIds) {
 
-        for (Long candidateId : dto.getCandidateIds()) {
-
-            Candidate candidate = candidateRepository.findById(candidateId)
-                    .orElseThrow(() -> new RuntimeException("Candidate not found"));
-
-            boolean alreadyExists =
-                    attendanceRepository.existsByCandidateAndTheoryClass(
-                            candidate,
-                            savedClass
-                    );
-
+        for (Long candidateId : candidateIds) {
+            Candidate candidate = getCandidate(candidateId);
+            boolean alreadyExists = attendanceRepository.existsAttendance(candidate, theoryClass);
             if (alreadyExists) {
                 continue;
             }
-
             TheoryClassAttendance attendance = new TheoryClassAttendance();
-
             attendance.setCandidate(candidate);
-            attendance.setTheoryClass(savedClass);
-            attendance.setProfessor(professor);
+            attendance.setTheoryClass(theoryClass);
+            attendance.setProfessor(theoryClass.getProfessor());
             attendance.setStatus(TheoryClassAttendanceStatus.ENROLLED);
-
             attendanceRepository.save(attendance);
+            theoryClass.getAttendances().add(attendance);
+            theoryClass.setCurrentEnrolled(theoryClass.getCurrentEnrolled() + 1);
 
             notificationService.createNotification(
                     candidate,
                     "Theory class scheduled",
                     "You have been enrolled in a theory class on "
-                            + savedClass.getTheoryDate()
+                            + theoryClass.getTheoryDate()
                             + " at "
-                            + savedClass.getTheoryStartTime()
-            );
-
-            savedClass.getAttendances().add(attendance);
-
-            savedClass.setCurrentEnrolled(
-                    savedClass.getCurrentEnrolled() + 1
+                            + theoryClass.getTheoryStartTime()
             );
         }
-
-        theoryClassRepository.save(savedClass);
     }
 
-    @Override
-    @Transactional
-    public void autoGenerateSchedule(com.autoskola.demo.dto.AutoGenerateTheoryScheduleDto dto) {
-        Domain domain = domainRepository.findById(dto.getDomainId())
-                .orElseThrow(() -> new RuntimeException("Domain not found"));
-
-        List<ProfessorAvailability> availabilities = availabilityRepository
-                .findByAvailableDateBetween(dto.getStartDate(), dto.getEndDate());
-
-        int createdClassesCount = 0;
-
-        for (ProfessorAvailability availability : availabilities) {
-            User professor = availability.getProfessor();
-            LocalDate date = availability.getAvailableDate();
-
-            boolean overlap = theoryClassRepository
-                    .existsByProfessorAndTheoryDateAndTheoryStartTimeLessThanAndTheoryEndTimeGreaterThan(
-                            professor,
-                            date,
-                            availability.getEndTime(),
-                            availability.getStartTime());
-
-            if (!overlap) {
-                TheoryClass theoryClass = new TheoryClass();
-                theoryClass.setTheoryDate(date);
-                theoryClass.setTheoryStartTime(availability.getStartTime());
-                theoryClass.setTheoryEndTime(availability.getEndTime());
-                theoryClass.setCapacity(dto.getDefaultCapacity());
-                theoryClass.setCurrentEnrolled(0);
-                theoryClass.setProfessor(professor);
-                theoryClass.setDomain(domain);
-                theoryClass.setAttendances(new ArrayList<>());
-
-                theoryClassRepository.save(theoryClass);
-                createdClassesCount++;
-            }
-        }
-
-        if (createdClassesCount == 0) {
-            throw new RuntimeException("Nije generisan nijedan novi čas. Ili nema unetih slobodnih termina profesora, ili su svi termini već zauzeti postojećim časovima.");
-        }
+    private Candidate getCandidate(Long candidateId) {
+        return candidateRepository.findById(candidateId).orElseThrow(() -> new RuntimeException("Candidate not found"));
     }
 
 
     @Override
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public List<AdminTheoryScheduleDto> getAdminSchedule() {
 
-        LocalDate today = LocalDate.now();
-
-        LocalDate monday =
-                today.with(
-                        TemporalAdjusters.previousOrSame(
-                                DayOfWeek.MONDAY
-                        )
-                );
-
+        LocalDate monday = getCurrentWeekMonday();
         LocalDate sunday = monday.plusDays(6);
+        List<TheoryClass> classes = theoryClassRepository.findWeeklyScheduleWithAttendances(monday, sunday);
+        List<AdminTheoryScheduleDto> result = new ArrayList<>();
+        for (TheoryClass theoryClass : classes) {
+            result.add(createAdminScheduleDto(theoryClass));
+        }
+        return result;
+    }
 
-        List<TheoryClass> classes =
-                theoryClassRepository
-                        .findWeeklyScheduleWithAttendances(
-                                monday,
-                                sunday
-                        );
+    private LocalDate getCurrentWeekMonday() {
 
-        return classes.stream()
-                .map(tc -> {
+        LocalDate today = LocalDate.now();
+        return today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+    }
 
-                    List<CandidateInfoDto> enrolledCandidates =
-                            tc.getAttendances()
-                                    .stream()
-                                    .filter(a ->
-                                            a.getStatus() ==
-                                                    TheoryClassAttendanceStatus.ENROLLED
-                                    )
-                                    .map(a ->
-                                            new CandidateInfoDto(
-                                                    a.getCandidate().getId(),
-                                                    a.getCandidate().getFirstName(),
-                                                    a.getCandidate().getLastName()
-                                            )
-                                    )
-                                    .toList();
+    private AdminTheoryScheduleDto createAdminScheduleDto(TheoryClass theoryClass) {
 
-                    return new AdminTheoryScheduleDto(
-                            tc.getTheoryId(),
-                            tc.getTheoryDate(),
-                            tc.getTheoryStartTime(),
-                            tc.getTheoryEndTime(),
-                            tc.getCapacity(),
-                            tc.getCurrentEnrolled(),
-                            tc.getProfessor().getFirstName()
-                                    + " "
-                                    + tc.getProfessor().getLastName(),
-                            tc.getDomain().getDomainName(),
-                            enrolledCandidates
-                    );
-                })
-                .toList();
+        List<CandidateInfoDto> enrolledCandidates = new ArrayList<>();
+        for (TheoryClassAttendance attendance : theoryClass.getAttendances()) {
+            if (attendance.getStatus() == TheoryClassAttendanceStatus.ENROLLED) {
+                Candidate candidate = attendance.getCandidate();
+                enrolledCandidates.add(new CandidateInfoDto(candidate.getId(), candidate.getFirstName(), candidate.getLastName()));
+            }
+        }
+        return new AdminTheoryScheduleDto(
+                theoryClass.getTheoryId(),
+                theoryClass.getTheoryDate(),
+                theoryClass.getTheoryStartTime(),
+                theoryClass.getTheoryEndTime(),
+                theoryClass.getCapacity(),
+                theoryClass.getCurrentEnrolled(),
+                getFullName(theoryClass.getProfessor()),
+                theoryClass.getDomain().getDomainName(),
+                enrolledCandidates
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<CandidateTheoryScheduleDto> getCandidateSchedule(
-            Long candidateId
-    ) {
-
-        candidateRepository.findById(candidateId)
-                .orElseThrow(() ->
-                        new RuntimeException("Candidate not found"));
-
-        LocalDate today = LocalDate.now();
-
-        LocalDate monday =
-                today.with(
-                        TemporalAdjusters.previousOrSame(
-                                DayOfWeek.MONDAY
-                        )
-                );
-
+    public List<CandidateTheoryScheduleDto> getCandidateSchedule(Long candidateId) {
+        getCandidate(candidateId);
+        LocalDate monday = getCurrentWeekMonday();
         LocalDate sunday = monday.plusDays(6);
+        List<TheoryClass> classes = theoryClassRepository.findByTheoryDateBetween(monday, sunday);
+        List<CandidateTheoryScheduleDto> result = new ArrayList<>();
+        for (TheoryClass theoryClass : classes) {
+            result.add(createCandidateScheduleDto(theoryClass, candidateId));
+        }
+        return result;
+    }
 
-        List<TheoryClass> allClasses =
-                theoryClassRepository.findByTheoryDateBetween(
-                        monday,
-                        sunday
-                );
+    private CandidateTheoryScheduleDto createCandidateScheduleDto(TheoryClass theoryClass, Long candidateId) {
 
-        return allClasses.stream()
-                .map(tc -> {
+        String status = getCandidateClassStatus(theoryClass, candidateId);
+        return new CandidateTheoryScheduleDto(
+                theoryClass.getTheoryId(),
+                theoryClass.getDomain().getDomainName(),
+                theoryClass.getTheoryDate(),
+                theoryClass.getTheoryStartTime(),
+                theoryClass.getTheoryEndTime(),
+                getFullName(theoryClass.getProfessor()),
+                status
+        );
+    }
 
-                    String status = "AVAILABLE";
+    private String getCandidateClassStatus(TheoryClass theoryClass, Long candidateId) {
 
-                    boolean isEnrolled =
-                            tc.getAttendances()
-                                    .stream()
-                                    .anyMatch(a ->
-                                            a.getCandidate().getId()
-                                                    .equals(candidateId)
-                                                    && a.getStatus() ==
-                                                    TheoryClassAttendanceStatus.ENROLLED
-                                    );
+        for (TheoryClassAttendance attendance : theoryClass.getAttendances()) {
+            boolean sameCandidate = attendance.getCandidate().getId().equals(candidateId);
+            boolean enrolled = attendance.getStatus() == TheoryClassAttendanceStatus.ENROLLED;
+            if (sameCandidate && enrolled) {
+                return "ENROLLED";
+            }
+        }
+        if (theoryClass.getCurrentEnrolled() >= theoryClass.getCapacity()) {
+            return "FULL";
+        }
+        return "AVAILABLE";
+    }
 
-                    if (isEnrolled) {
-                        status = "ENROLLED";
-                    } else if (
-                            tc.getCurrentEnrolled()
-                                    >= tc.getCapacity()
-                    ) {
-                        status = "FULL";
-                    }
-
-                    return new CandidateTheoryScheduleDto(
-                            tc.getTheoryId(),
-                            tc.getDomain().getDomainName(),
-                            tc.getTheoryDate(),
-                            tc.getTheoryStartTime(),
-                            tc.getTheoryEndTime(),
-                            tc.getProfessor().getFirstName()
-                                    + " "
-                                    + tc.getProfessor().getLastName(),
-                            status
-                    );
-                })
-                .toList();
+    private String getFullName(User user) {
+        return user.getFirstName() + " " + user.getLastName();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ProfessorTheoryScheduleDto> getProfessorSchedule(Long professorId) {
-        User professor = userRepository.findById(professorId)
-                .orElseThrow(() -> new RuntimeException("Professor not found"));
 
-        if (professor.getRole() != Role.PROFESSOR) {
-            throw new RuntimeException("User is not a professor");
-        }
-
-        LocalDate today = LocalDate.now();
-        LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        User professor = getProfessor(professorId);
+        LocalDate monday = getCurrentWeekMonday();
         LocalDate sunday = monday.plusDays(6);
-
-        List<TheoryClass> classes = theoryClassRepository
-                .findByProfessorAndTheoryDateBetween(professor, monday, sunday);
-
-        return classes.stream()
-                .map(tc -> new ProfessorTheoryScheduleDto(
-                        tc.getTheoryId(),
-                        tc.getDomain().getDomainName(),
-                        tc.getTheoryDate(),
-                        tc.getTheoryStartTime(),
-                        tc.getTheoryEndTime(),
-                        tc.getCurrentEnrolled(),
-                        tc.getCapacity()
-                ))
-                .toList();
+        List<TheoryClass> classes = theoryClassRepository.findByProfessorAndTheoryDateBetween(professor, monday, sunday);
+        List<ProfessorTheoryScheduleDto> result = new ArrayList<>();
+        for (TheoryClass theoryClass : classes) {
+            result.add(new ProfessorTheoryScheduleDto(
+                    theoryClass.getTheoryId(),
+                    theoryClass.getDomain().getDomainName(),
+                    theoryClass.getTheoryDate(),
+                    theoryClass.getTheoryStartTime(),
+                    theoryClass.getTheoryEndTime(),
+                    theoryClass.getCurrentEnrolled(),
+                    theoryClass.getCapacity()
+            ));
+        }
+        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public ProfessorClassDetailsDto getClassDetailsForProfessor(Long theoryClassId) {
-        TheoryClass tc = theoryClassRepository.findById(theoryClassId)
-                .orElseThrow(() -> new RuntimeException("Theory class not found"));
 
-        List<CandidateTheoryAttendanceInfoDto> candidateList = tc.getAttendances().stream()
-                .filter(a -> a.getStatus() != TheoryClassAttendanceStatus.CANCELLED)
-                .map(a -> new CandidateTheoryAttendanceInfoDto(
-                        a.getAttendanceId(),
-                        a.getCandidate().getId(),
-                        a.getCandidate().getFirstName(),
-                        a.getCandidate().getLastName(),
-                        a.getStatus().name()
-                ))
-                .toList();
-
-        long presentCount = tc.getAttendances().stream()
-                .filter(a -> a.getStatus() == TheoryClassAttendanceStatus.ATTENDED)
-                .count();
-
-        String professorFullName = tc.getProfessor().getFirstName() + " " + tc.getProfessor().getLastName();
-
+        TheoryClass theoryClass = getTheoryClass(theoryClassId);
+        List<CandidateTheoryAttendanceInfoDto> candidateList = new ArrayList<>();
+        long presentCount = 0;
+        for (TheoryClassAttendance attendance : theoryClass.getAttendances()) {
+            if (attendance.getStatus() == TheoryClassAttendanceStatus.ATTENDED) {
+                presentCount++;
+            }
+            if (attendance.getStatus() != TheoryClassAttendanceStatus.CANCELLED) {
+                Candidate candidate = attendance.getCandidate();
+                candidateList.add(new CandidateTheoryAttendanceInfoDto(
+                        attendance.getAttendanceId(),
+                        candidate.getId(),
+                        candidate.getFirstName(),
+                        candidate.getLastName(),
+                        attendance.getStatus().name()
+                ));
+            }
+        }
         return new ProfessorClassDetailsDto(
-                tc.getTheoryId(),
-                tc.getDomain().getDomainName(),
-                tc.getTheoryDate(),
-                tc.getTheoryStartTime(),
-                tc.getTheoryEndTime(),
-                professorFullName,
+                theoryClass.getTheoryId(),
+                theoryClass.getDomain().getDomainName(),
+                theoryClass.getTheoryDate(),
+                theoryClass.getTheoryStartTime(),
+                theoryClass.getTheoryEndTime(),
+                getFullName(theoryClass.getProfessor()),
                 presentCount,
                 candidateList
         );
@@ -356,88 +285,86 @@ public class TheoryClassServiceImpl implements TheoryClassService {
     @Override
     @Transactional
     public void submitAttendance(Long theoryClassId, List<TheoryAttendanceRecordDto> records) {
-        theoryClassRepository.findById(theoryClassId)
-                .orElseThrow(() -> new RuntimeException("Theory class not found"));
 
+        getTheoryClass(theoryClassId);
         for (TheoryAttendanceRecordDto record : records) {
-            TheoryClassAttendance attendance = attendanceRepository.findById(record.getAttendanceId())
-                    .orElseThrow(() -> new RuntimeException("Attendance record not found for ID: " + record.getAttendanceId()));
-
-            TheoryClassAttendanceStatus oldStatus =
-                    attendance.getStatus();
-
-            TheoryClassAttendanceStatus newStatus =
-                    TheoryClassAttendanceStatus.valueOf(
-                            record.getStatus().toUpperCase()
-                    );
-
+            TheoryClassAttendance attendance = attendanceRepository.findById(record.getAttendanceId()).orElseThrow(() -> new RuntimeException("Attendance record not found"));
+            TheoryClassAttendanceStatus oldStatus = attendance.getStatus();
+            TheoryClassAttendanceStatus newStatus = TheoryClassAttendanceStatus.valueOf(record.getStatus().toUpperCase());
             attendance.setStatus(newStatus);
-
-            if (
-                    oldStatus != TheoryClassAttendanceStatus.ATTENDED
-                            &&
-                            newStatus == TheoryClassAttendanceStatus.ATTENDED
-            ) {
-
-                Candidate candidate =
-                        attendance.getCandidate();
-
-                candidate.setTheoryClassesCount(
-                        candidate.getTheoryClassesCount() + 1
-                );
-
-                candidateRepository.save(candidate);
+            if (oldStatus != TheoryClassAttendanceStatus.ATTENDED && newStatus == TheoryClassAttendanceStatus.ATTENDED) {
+                increaseCandidateTheoryClassCount(attendance.getCandidate());
             }
-
             attendanceRepository.save(attendance);
         }
     }
 
+
+    private TheoryClass getTheoryClass(Long theoryClassId) {
+        return theoryClassRepository.findById(theoryClassId).orElseThrow(() -> new RuntimeException("Theory class not found"));
+    }
+
+    private void increaseCandidateTheoryClassCount(Candidate candidate) {
+
+        candidate.setTheoryClassesCount(candidate.getTheoryClassesCount() + 1);
+        candidateRepository.save(candidate);
+    }
+
     @Override
-    public void cancelAttendance(
-            Long candidateId,
-            Long theoryClassId
-    ) {
+    public void cancelAttendance(Long candidateId, Long theoryClassId) {
 
-        Candidate candidate =
-                candidateRepository.findById(candidateId).orElseThrow(() ->
-                                new RuntimeException("Candidate not found"));
-
-        TheoryClass theoryClass =
-                theoryClassRepository.findById(theoryClassId)
-                        .orElseThrow(() ->
-                                new RuntimeException("Theory class not found"));
-
-        TheoryClassAttendance attendance =
-                attendanceRepository
-                        .findByCandidateAndTheoryClass(
-                                candidate,
-                                theoryClass
-                        )
-                        .orElseThrow(() ->
-                                new RuntimeException("Attendance not found"));
-
-        attendance.setStatus(
-                TheoryClassAttendanceStatus.CANCELLED
-        );
-
+        Candidate candidate = getCandidate(candidateId);
+        TheoryClass theoryClass = getTheoryClass(theoryClassId);
+        TheoryClassAttendance attendance = attendanceRepository.findByCandidateAndTheoryClass(candidate, theoryClass).orElseThrow(() -> new RuntimeException("Attendance not found"));
+        attendance.setStatus(TheoryClassAttendanceStatus.CANCELLED);
         attendanceRepository.save(attendance);
+        updateCurrentEnrolled(theoryClass);
+    }
 
-        Integer enrolledCount = attendanceRepository
-                .countByTheoryClassAndStatus(
-                        theoryClass,
-                        TheoryClassAttendanceStatus.ENROLLED
-                );
+    private void updateCurrentEnrolled(TheoryClass theoryClass) {
 
+        Integer enrolledCount = attendanceRepository.countByTheoryClassAndStatus(theoryClass, TheoryClassAttendanceStatus.ENROLLED);
         theoryClass.setCurrentEnrolled(enrolledCount);
-
         theoryClassRepository.save(theoryClass);
     }
 
-    private void sendTheoryEnrollmentNotification(
-            Candidate candidate,
-            TheoryClass theoryClass
-    ) {
+    @Override
+    public void enrollCandidate(Long candidateId, Long theoryClassId) {
+
+        Candidate candidate = getCandidate(candidateId);
+        TheoryClass theoryClass = getTheoryClass(theoryClassId);
+        if (theoryClass.getCurrentEnrolled() >= theoryClass.getCapacity()) {
+            throw new RuntimeException("Class is full");
+        }
+        TheoryClassAttendance existingAttendance = attendanceRepository.findByCandidateAndTheoryClass(candidate, theoryClass).orElse(null);
+        if (existingAttendance != null) {
+            handleExistingAttendance(existingAttendance, candidate, theoryClass);
+            return;
+        }
+        TheoryClassAttendance attendance = new TheoryClassAttendance();
+        attendance.setCandidate(candidate);
+        attendance.setTheoryClass(theoryClass);
+        attendance.setProfessor(theoryClass.getProfessor());
+        attendance.setStatus(TheoryClassAttendanceStatus.ENROLLED);
+        attendanceRepository.save(attendance);
+        updateCurrentEnrolled(theoryClass);
+        sendTheoryEnrollmentNotification(candidate, theoryClass);
+    }
+
+    private void handleExistingAttendance(TheoryClassAttendance attendance, Candidate candidate, TheoryClass theoryClass) {
+
+        if (attendance.getStatus() == TheoryClassAttendanceStatus.CANCELLED) {
+            attendance.setStatus(TheoryClassAttendanceStatus.ENROLLED);
+            attendanceRepository.save(attendance);
+            updateCurrentEnrolled(theoryClass);
+            sendTheoryEnrollmentNotification(candidate, theoryClass);
+            return;
+        }
+        throw new RuntimeException("Candidate already has attendance record for this class");
+    }
+
+    private void sendTheoryEnrollmentNotification(Candidate candidate, TheoryClass theoryClass) {
+
         notificationService.createNotification(
                 candidate,
                 "Theory class enrollment",
@@ -449,103 +376,13 @@ public class TheoryClassServiceImpl implements TheoryClassService {
     }
 
     @Override
-    public void enrollCandidate(
-            Long candidateId,
-            Long theoryClassId
-    ) {
-
-        Candidate candidate = candidateRepository.findById(candidateId).orElseThrow(() ->
-                                new RuntimeException("Candidate not found"));
-
-        TheoryClass theoryClass = theoryClassRepository.findById(theoryClassId).orElseThrow(() ->
-                                new RuntimeException("Theory class not found"));
-
-        if (
-                theoryClass.getCurrentEnrolled() >= theoryClass.getCapacity()
-        ) {
-            throw new RuntimeException("Class is full");
-        }
-
-       /* boolean alreadyExists = attendanceRepository
-                        .existsByCandidateAndTheoryClassAndStatus(
-                                candidate,
-                                theoryClass,
-                                TheoryClassAttendanceStatus.ENROLLED
-                        );
-
-        if (alreadyExists) {
-            throw new RuntimeException("Candidate already enrolled");
-        }*/
-//provera da ne moze 2 put da prisustvuje istom casu
-        TheoryClassAttendance existingAttendance =
-                attendanceRepository
-                        .findByCandidateAndTheoryClass(
-                                candidate,
-                                theoryClass
-                        )
-                        .orElse(null);
-
-        if (existingAttendance != null) {
-
-            if (existingAttendance.getStatus()
-                    == TheoryClassAttendanceStatus.CANCELLED) {
-
-                existingAttendance.setStatus(
-                        TheoryClassAttendanceStatus.ENROLLED
-                );
-
-                attendanceRepository.save(existingAttendance);
-
-                Integer enrolledCount =
-                        attendanceRepository
-                                .countByTheoryClassAndStatus(
-                                        theoryClass,
-                                        TheoryClassAttendanceStatus.ENROLLED
-                                );
-
-                theoryClass.setCurrentEnrolled(enrolledCount);
-
-                theoryClassRepository.save(theoryClass);
-                sendTheoryEnrollmentNotification(candidate, theoryClass);
-
-                return;
-            }
-
-            throw new RuntimeException(
-                    "Candidate already has attendance record for this class"
-            );
-        }
-
-        TheoryClassAttendance attendance = new TheoryClassAttendance();
-
-        attendance.setCandidate(candidate);
-        attendance.setTheoryClass(theoryClass);
-        attendance.setProfessor(theoryClass.getProfessor());
-        attendance.setStatus(
-                TheoryClassAttendanceStatus.ENROLLED
-        );
-
-        attendanceRepository.save(attendance);
-        sendTheoryEnrollmentNotification(candidate, theoryClass);
-
-        Integer enrolledCount = attendanceRepository
-                .countByTheoryClassAndStatus(
-                        theoryClass,
-                        TheoryClassAttendanceStatus.ENROLLED
-                );
-
-        theoryClass.setCurrentEnrolled(enrolledCount);
-
-        theoryClassRepository.save(theoryClass);
-    }
-
     public List<DomainDto> getAllDomains() {
-        List<Domain> domains = domainRepository.findAll();
 
-        return domains.stream().map(dom -> new DomainDto(
-                dom.getDomainId(),
-                dom.getDomainName(),
-                dom.getDomainOrderNumber()
-        )).collect(Collectors.toList());
+        List<Domain> domains = domainRepository.findAll();
+        List<DomainDto> result = new ArrayList<>();
+        for (Domain domain : domains) {
+            result.add(new DomainDto(domain.getDomainId(), domain.getDomainName(), domain.getDomainOrderNumber()));
+        }
+        return result;
     }
 }

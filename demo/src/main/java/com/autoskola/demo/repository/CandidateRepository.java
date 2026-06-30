@@ -8,16 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface CandidateRepository
-        extends JpaRepository<Candidate, Long> {
+public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
-    List<Candidate> findByCategoryPackage_Category(
-            Category category
-    );
+    List<Candidate> findByCategoryPackage_Category(Category category);
 
-    List<Candidate> findByStatus(
-            CandidateStatus status
-    );
+    List<Candidate> findByStatus(CandidateStatus status);
 
     List<Candidate> findByCategoryPackage_CategoryAndStatus(
             Category category,

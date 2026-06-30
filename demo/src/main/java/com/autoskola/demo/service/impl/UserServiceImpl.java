@@ -137,4 +137,21 @@ public class UserServiceImpl implements UserService {
         )).collect(Collectors.toList());
     }
 
+    @Override
+    public String updateProfile(UpdateUserDto dto, HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+
+        sessionUser.setFirstName(dto.getFirstName());
+        sessionUser.setLastName(dto.getLastName());
+        sessionUser.setUsername(dto.getUsername());
+        sessionUser.setEmail(dto.getEmail());
+        sessionUser.setContact(dto.getContact());
+
+        userRepository.save(sessionUser);
+
+        return "Profile updated!";
+    }
+
+
 }

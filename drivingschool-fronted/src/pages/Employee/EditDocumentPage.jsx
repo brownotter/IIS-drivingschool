@@ -20,7 +20,8 @@ function EditDocumentPage() {
     const [commonFields, setCommonFields] = useState({
         docsTitle: "",
         docsExpireDate: "",
-        docsStatus: "ACTIVE"
+        docsStatus: "ACTIVE",
+        changeDescription: "Document updated"
     });
 
     const [specificFields, setSpecificFields] = useState({});
@@ -37,7 +38,8 @@ function EditDocumentPage() {
             setCommonFields({
                 docsTitle: data.docsTitle || "",
                 docsExpireDate: data.docsExpireDate || "",
-                docsStatus: data.docsStatus || "ACTIVE"
+                docsStatus: data.docsStatus || "ACTIVE",
+                changeDescription: "Document updated"
             });
 
             if (data.documentType === "MEDICALEXAM") {
@@ -366,6 +368,17 @@ function EditDocumentPage() {
                                 <option value="EXPIRING_SOON">Expiring soon</option>
                                 <option value="ARCHIVED">Archived</option>
                             </select>
+                        </div>
+
+                        <div style={styles.fieldGroup}>
+                            <label style={styles.label}>Edit description</label>
+                            <input
+                                name="changeDescription"
+                                value={commonFields.changeDescription}
+                                onChange={handleCommonChange}
+                                style={styles.input}
+                                placeholder="Document updated"
+                            />
                         </div>
 
                     </div>

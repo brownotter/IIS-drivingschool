@@ -18,10 +18,10 @@ public interface DocumentService {
 
     Object getDocumentDetails(Long documentId);
 
-    DocumentsDto updateMedicalExam(Long documentId, MedicalExamDto dto);
-    DocumentsDto updateCertificate(Long documentId, CertificateDto dto);
-    DocumentsDto updateContract(Long documentId, ContractDto dto);
-    DocumentsDto updateExamResult(Long documentId, ExamResultDto dto);
+    DocumentsDto updateMedicalExam(Long documentId, MedicalExamDto dto, Long employeeId);
+    DocumentsDto updateCertificate(Long documentId, CertificateDto dto, Long employeeId);
+    DocumentsDto updateContract(Long documentId, ContractDto dto, Long employeeId);
+    DocumentsDto updateExamResult(Long documentId, ExamResultDto dto, Long employeeId);
 
     List<DocumentsDto> searchDocuments(String title, DocumentStatus status, String documentType);
 
@@ -32,5 +32,9 @@ public interface DocumentService {
     List<DocsAlertDto> getExpiredDocumentsAlert();
 
     List<DocsVersionDto> getDocumentVersions(Long documentId);
-    DocumentsDto restoreVersion(Long documentId, Long versionId);
+    DocumentsDto restoreVersion(Long documentId, Long versionId, Long employeeId);
+
+    ArchiveDto archiveDocument(Long documentId, String comment);
+    List<ArchiveDto> getAllArchivedDocuments();
+    ArchiveDto unarchiveDocument(Long documentId);
 }

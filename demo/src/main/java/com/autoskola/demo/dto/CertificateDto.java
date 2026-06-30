@@ -16,4 +16,5 @@ public class CertificateDto {
     private LocalDate cerfDate;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate validDate;
+    private String changeDescription;
 }

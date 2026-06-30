@@ -18,4 +18,5 @@ public class MedicalExamDetailsDto {
     private String medResult;
     private LocalDate medExamDate;
     private String documentType = "MEDICALEXAM";
+    private String candidateName;
 }

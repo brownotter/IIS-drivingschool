@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { getDocumentDetails, getDocumentValidity, getDocumentVersions, restoreDocumentVersion } from "../../services/documentService";
+import { getDocumentDetails, getDocumentValidity, getDocumentVersions, restoreDocumentVersion, archiveDocument } from "../../services/documentService";
 
 function DocumentDetailsPage() {
     const navigate = useNavigate();
@@ -14,6 +14,9 @@ function DocumentDetailsPage() {
 
     const [versions, setVersions] = useState([]);
     const [previewVersion, setPreviewVersion] = useState(null);
+
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [archiveComment, setArchiveComment] = useState("");
 
     useEffect(() => {
         loadDocument();
@@ -77,7 +80,35 @@ function DocumentDetailsPage() {
     issueDate: "Issue date"
     };
 
-    const hiddenFields = ["documentsId", "documentType"];
+    const hiddenFields = ["documentsId", "documentType", "candidateName"];
+
+    const handleArchive = async () => {
+    try {
+        await archiveDocument(id, archiveComment);
+        setShowArchiveModal(false);
+        loadDocument();
+    } catch (err) {
+        console.error(err);
+    }
+    };
+
+    const handleDownload = async () => {
+    try {
+        const response = await fetch(
+            `http://localhost:8080/documents/${id}/pdf`,
+            { credentials: "include" }
+        );
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `document_${id}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error(err);
+    }
+    };
 
     const logout = async () => {
         await fetch("http://localhost:8080/user/logout", {
@@ -86,6 +117,12 @@ function DocumentDetailsPage() {
         });
         localStorage.clear();
         navigate("/");
+    };
+
+    const formatDate = (date) => {
+    if (!date) return "-";
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
     };
 
     const formatType = (type) => {
@@ -117,7 +154,7 @@ function DocumentDetailsPage() {
                 <>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Examination date</label>
-                        <div style={styles.fieldBox}>{doc.medExamDate || "-"}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.medExamDate) || "-"}</div>
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Institution</label>
@@ -144,7 +181,7 @@ function DocumentDetailsPage() {
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Start date</label>
-                        <div style={styles.fieldBox}>{doc.contStartDate}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.contStartDate)}</div>
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Amount</label>
@@ -163,11 +200,11 @@ function DocumentDetailsPage() {
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Certificate date</label>
-                        <div style={styles.fieldBox}>{doc.cerfDate}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.cerfDate)}</div>
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Valid date</label>
-                        <div style={styles.fieldBox}>{doc.validDate}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.validDate)}</div>
                     </div>
                 </>
             );
@@ -190,7 +227,7 @@ function DocumentDetailsPage() {
                     </div>
                     <div style={styles.fieldGroup}>
                         <label style={styles.label}>Issue date</label>
-                        <div style={styles.fieldBox}>{doc.issueDate}</div>
+                        <div style={styles.fieldBox}>{formatDate(doc.issueDate)}</div>
                     </div>
                 </>
             );
@@ -229,6 +266,8 @@ function DocumentDetailsPage() {
                 </div>
 
                 <h1 style={styles.docTitle}>{doc.docsTitle}</h1>
+                
+                <p style={styles.candidateName}>{doc.candidateName}</p>
 
                 <div style={styles.card}>
 
@@ -259,15 +298,15 @@ function DocumentDetailsPage() {
                         <div style={styles.row}>
                             <div style={styles.fieldGroup}>
                                 <label style={styles.label}>Created date</label>
-                                <div style={styles.fieldBox}>{doc.docsCreateDate}</div>
+                                <div style={styles.fieldBox}>{formatDate(doc.docsCreateDate)}</div>
                             </div>
                             <div style={styles.fieldGroup}>
                                 <label style={styles.label}>Expiry date</label>
-                                <div style={styles.fieldBox}>{doc.docsExpireDate || "-"}</div>
+                                <div style={styles.fieldBox}>{formatDate(doc.docsExpireDate) || "-"}</div>
                             </div>
                             <div style={styles.fieldGroup}>
                                 <label style={styles.label}>Last modified</label>
-                                <div style={styles.fieldBox}>{doc.docsModfDate || "-"}</div>
+                                <div style={styles.fieldBox}>{formatDate(doc.docsModfDate) || "-"}</div>
                             </div>
                         </div>
 
@@ -281,8 +320,16 @@ function DocumentDetailsPage() {
 
 
                     <div style={styles.actions}>
-                        <button style={styles.actionBtn}>Download</button>
-                        <button style={styles.actionBtn}>Archive</button>
+                        <button style={styles.actionBtn} onClick={handleDownload}>
+                            Download
+                        </button>
+                        <button
+                            style={styles.actionBtn}
+                            onClick={() => setShowArchiveModal(true)}
+                            disabled={doc.docsStatus === "ARCHIVED"}
+                        >
+                            Archive
+                        </button>
                         <button
                             style={styles.actionBtn}
                             onClick={() => navigate(`/employee/documents/${id}/edit`)}
@@ -311,10 +358,10 @@ function DocumentDetailsPage() {
                                 }
                             </span>
                             <span style={styles.alertDate}>
-                                Valid until: {validity.validUntil || "-"}
+                                Valid until: {formatDate(validity.validUntil) || "-"}
                             </span>
                             <span style={styles.alertDate}>
-                                Last check: {validity.lastCheck || "-"}
+                                Last check: {formatDate(validity.lastCheck) || "-"}
                             </span>
                         </div>
                     ) : (
@@ -401,6 +448,35 @@ function DocumentDetailsPage() {
                                 </div>
                             </div>
                         )}
+
+                        {showArchiveModal && (
+                            <div style={styles.modalOverlay}>
+                                <div style={styles.modal}>
+                                    <h3 style={styles.modalTitle}>Archive document</h3>
+                                    <p style={{ color: "#888", marginBottom: "16px", fontSize: "14px" }}>
+                                        Are you sure you want to archive this document?
+                                    </p>
+                                    <div style={styles.fieldGroup}>
+                                        <label style={styles.label}>Comment (optional)</label>
+                                        <input
+                                            style={styles.fieldBox}
+                                            value={archiveComment}
+                                            onChange={(e) => setArchiveComment(e.target.value)}
+                                            placeholder="Reason for archiving..."
+                                        />
+                                    </div>
+                                    <div style={styles.modalButtons}>
+                                        <button style={styles.restoreConfirmBtn} onClick={handleArchive}>
+                                            Confirm
+                                        </button>
+                                        <button style={styles.cancelBtn} onClick={() => setShowArchiveModal(false)}>
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
 
             </div>
@@ -444,6 +520,12 @@ const styles = {
         fontSize: "26px",
         marginBottom: "24px",
         textAlign: "center"
+    },
+    candidateName: {
+    textAlign: "center",
+    fontSize: "16px",
+    color: "#888",
+    marginBottom: "24px"
     },
     card: {
         backgroundColor: "white",
