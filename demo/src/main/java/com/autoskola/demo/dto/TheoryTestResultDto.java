@@ -1,4 +1,5 @@
 package com.autoskola.demo.dto;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.autoskola.demo.model.TheoryTestType;
@@ -19,4 +20,6 @@ public class TheoryTestResultDto {
     private Integer totalQuestions;
     private List<String> domainsToImprove;
     private List<TheoryQuestionResultDto> questions;
+    private LocalDateTime startedAt;
+    private LocalDateTime submittedAt;
 }

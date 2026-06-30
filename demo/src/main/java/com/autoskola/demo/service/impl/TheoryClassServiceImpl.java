@@ -39,6 +39,16 @@ public class TheoryClassServiceImpl implements TheoryClassService {
         TheoryClass savedClass = theoryClassRepository.save(theoryClass);
         enrollInitialCandidates(savedClass, dto.getCandidateIds());
         theoryClassRepository.save(savedClass);
+        sendNotificationToProfessor(professor, savedClass);
+    }
+
+    private void sendNotificationToProfessor(User professor, TheoryClass theoryClass){
+        notificationService.createProfessorsNotification(professor,
+                "Theory class scheduled",
+                "You have new theory class on "
+                        + theoryClass.getTheoryDate()
+                        + " at "
+                        + theoryClass.getTheoryStartTime());
     }
 
     private User getProfessor(Long professorId) {

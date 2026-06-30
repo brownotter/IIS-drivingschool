@@ -30,6 +30,12 @@ public class Candidate extends User{
     @Column
     private int theoryAttemptsCount;
 
+    @Column(nullable = false)
+    private int theorySimulationsCount = 0;
+
+    @Column(nullable = false)
+    private Double averageSimulationScore = 0.0;
+
     @Column
     private int practiceClassesCount;
 

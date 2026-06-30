@@ -31,4 +31,8 @@ public class Notification {
     @ManyToOne
     @JoinColumn(name = "candidate_id")
     private Candidate candidate;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

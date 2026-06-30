@@ -33,6 +33,13 @@ import CandidateFinancials from "./pages/Candidate/CandidateFinancials";
 import CandidateTheorySimulation from "./pages/Candidate/CandidateTheorySimulation";
 import CandidateTheoryExam from "./pages/Candidate/CandidateTheoryExam";
 import InstructorCandidates from "./pages/Instructor/InstructorCandidates";
+import TheorySimulationTest from "./pages/Candidate/TheorySimulationTest";
+import TheorySimulationTests from "./pages/Candidate/TheorySimulationTest";
+import TheorySimulationTestResults from "./pages/Candidate/TheorySimulationTestResults";
+import TheoryFinalExam from "./pages/Candidate/TheoryFinalExam";
+import TheoryFinalExamResults from "./pages/Candidate/TheoryFinalExamResults";
+import ProfessorNotifications from "./pages/Professor/ProfessorNotifications";
+import Professors from "./pages/Admin/Professors";
 
 function App() {
 
@@ -97,6 +104,28 @@ function App() {
             />
 
             <Route
+                path="/candidate/theory-simulation/start-test/:testId"
+                element={<TheorySimulationTests />}
+            />  
+
+            <Route
+                path="/candidate/theory-simulation/result/:testId"
+                element={<TheorySimulationTestResults />}
+            />
+
+
+            <Route
+                path="/candidate/theory-exam/start-test/:testId"
+                element={<TheoryFinalExam />}
+            />
+
+            <Route
+                path="/candidate/theory-exam/result/:testId"
+                element={<TheoryFinalExamResults />}
+            />
+
+
+            <Route
                 path="/candidate/theory-exam"
                 element={<CandidateTheoryExam />}
             />
@@ -119,6 +148,11 @@ function App() {
             <Route
                 path="/professor/availability"
                 element={<ProfessorMyAvailability />}
+            />
+
+            <Route
+                path="/professor/notifications"
+                element={<ProfessorNotifications />}
             />
 
             <Route
@@ -178,6 +212,11 @@ function App() {
                 <Route 
                     path="/admin/instructors" 
                     element={<Instructors />} />
+
+                <Route
+                    path="/admin/professors"
+                    element={<Professors />}
+                />
 
                 // Instructor routes
                 <Route

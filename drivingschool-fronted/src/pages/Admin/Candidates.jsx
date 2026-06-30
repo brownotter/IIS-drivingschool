@@ -70,14 +70,13 @@ function Candidates() {
 
             <Sidebar
                 buttons={[
-                    {
-                        label: "My Profile",
-                        onClick: () => navigate("/admin/profile")
-                    },
-                    {
-                        label: "Candidates",
-                        onClick: () => navigate("/admin/candidates")
-                    }
+                    { label: "My Profile", onClick: () => navigate("/admin/profile") },
+                    { label: "Candidates", onClick: () => navigate("/admin/candidates") },
+                    { label: "Professors", onClick: () => navigate("/admin/professors") },
+                    { label: "Instructors", onClick: () => navigate("/admin/instructors") },
+                    { label: "Vehicles", onClick: () => navigate("/admin/vehicles") },
+                    { label: "Theory Schedule", onClick: () => navigate("/admin/theory-schedule") },
+                    { label: "Requests", onClick: () => navigate("/admin/requests") },
                 ]}
                 logout={logout}
             />

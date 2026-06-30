@@ -4,9 +4,11 @@ import com.autoskola.demo.dto.*;
 import com.autoskola.demo.model.*;
 import com.autoskola.demo.repository.*;
 import com.autoskola.demo.service.TheoryTestService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -29,11 +31,21 @@ public class TheoryTestServiceImpl implements TheoryTestService {
     private final TheoryTestRepository theoryTestRepository;
     private final CandidateAnswerRepository candidateAnswerRepository;
     private final TheoryTestQuestionRepository theoryTestQuestionRepository;
+    private final MedicalExamRepository medicalExamRepository;
 
     @Override
-    public TheoryTest startSimulationTest(Long candidateId) {
+    public TheoryTest startSimulationTest(HttpSession session) {
 
-        Candidate candidate = candidateRepository.findById(candidateId).orElseThrow(() -> new RuntimeException("Candidate not found"));
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+        Candidate candidate = candidateRepository.findById(sessionUser.getId()).orElseThrow(() -> new RuntimeException("Candidate not found"));
+
+        if (theoryTestRepository.existsByCandidateAndTestTypeAndPassed(candidate, TheoryTestType.FINAL_EXAM, true)) {
+            throw new RuntimeException("Candidate has already passed the final exam.");
+        }
+
         TheoryTest theoryTest = new TheoryTest();
         theoryTest.setCandidate(candidate);
         theoryTest.setTestType(TheoryTestType.SIMULATION);
@@ -43,7 +55,7 @@ public class TheoryTestServiceImpl implements TheoryTestService {
         theoryTest.setPassed(false);
 
         TheoryTest savedTest = theoryTestRepository.save(theoryTest);
-        List<Question> questions = generateAdaptiveSimulationQuestions(candidateId);
+        List<Question> questions = generateAdaptiveSimulationQuestions(candidate.getId());
         for (Question question : questions) {
             TheoryTestQuestion theoryTestQuestion = new TheoryTestQuestion();
             theoryTestQuestion.setTheoryTest(savedTest);
@@ -207,8 +219,17 @@ public class TheoryTestServiceImpl implements TheoryTestService {
 
 
     @Override
-    public List<TheoryTestQuestionDto> getQuestionsForTest(Long testId) {
-        TheoryTest test = theoryTestRepository.findById(testId).orElseThrow(() -> new RuntimeException("Test not found"));
+    public List<TheoryTestQuestionDto> getQuestionsForTest(Long testId, HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+        TheoryTest test = theoryTestRepository.findById(testId).orElseThrow(() ->
+                new RuntimeException("Test not found"));
+        if (!test.getCandidate().getId().equals(sessionUser.getId())) {
+            throw new RuntimeException("Access denied");
+        }
         List<TheoryTestQuestion> testQuestions = theoryTestQuestionRepository.findByTheoryTest(test);
         List<TheoryTestQuestionDto> testQuestionDto = new ArrayList<>();
         for (TheoryTestQuestion testQuestion : testQuestions) {
@@ -226,8 +247,17 @@ public class TheoryTestServiceImpl implements TheoryTestService {
     }
 
     @Override
-    public TheoryTest submitTest(SubmitTheoryTestDto dto) {
-        TheoryTest theoryTest = theoryTestRepository.findById(dto.getTheoryTestId()).orElseThrow(() -> new RuntimeException("Theory test not found"));
+    public TheoryTest submitTest(SubmitTheoryTestDto dto, HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+        TheoryTest theoryTest = theoryTestRepository.findById(dto.getTheoryTestId())
+                .orElseThrow(() -> new RuntimeException("Theory test not found"));
+        if (!theoryTest.getCandidate().getId().equals(sessionUser.getId())) {
+            throw new RuntimeException("Access denied");
+        }
         if (theoryTest.getSubmittedAt() != null) {
             throw new RuntimeException("Theory test already submitted");
         }
@@ -254,12 +284,58 @@ public class TheoryTestServiceImpl implements TheoryTestService {
         theoryTest.setScore(score);
         theoryTest.setPassed(score >= PASSING_SCORE);
         theoryTest.setSubmittedAt(LocalDateTime.now());
-        return theoryTestRepository.save(theoryTest);
+        theoryTestRepository.save(theoryTest);
+
+        Candidate candidate = theoryTest.getCandidate();
+        if (theoryTest.getTestType() == TheoryTestType.SIMULATION) {
+            increaseSimulationCount(candidate);
+            updateSimulationScore(candidate);
+        }
+        candidate.setTheoryAttemptsCount(candidate.getTheoryAttemptsCount() + 1);
+        candidate.setTheoryScore(score);
+        if(score >= PASSING_SCORE){
+            candidate.setStatus(CandidateStatus.DRIVING);
+        }
+        candidateRepository.save(candidate);
+        return theoryTest;
+    }
+
+    private void updateSimulationScore(Candidate candidate) {
+        List<TheoryTest> allSimulationTest = theoryTestRepository.findAll();
+        double totalScore = 0;
+        int simulationCount = 0;
+
+        for(TheoryTest test : allSimulationTest){
+            if(test.getCandidate().getId().equals(candidate.getId()) && test.getTestType() == TheoryTestType.SIMULATION){
+                totalScore += test.getScore();
+                simulationCount++;
+            }
+        }
+        double averageScore = 0;
+        if (simulationCount > 0) {
+            averageScore = totalScore / simulationCount;
+        }
+        candidate.setAverageSimulationScore(averageScore);
+        candidateRepository.save(candidate);
+    }
+
+    private void increaseSimulationCount(Candidate candidate){
+        candidate.setTheorySimulationsCount(candidate.getTheorySimulationsCount() + 1);
+        candidateRepository.save(candidate);
     }
 
     @Override
-    public TheoryTestResultDto getTheoryTestResult(Long testId) {
-        TheoryTest theoryTest = theoryTestRepository.findById(testId).orElseThrow(() -> new RuntimeException("Theory test not found"));
+    public TheoryTestResultDto getTheoryTestResult(Long testId, HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+        TheoryTest theoryTest = theoryTestRepository.findById(testId).orElseThrow(() ->
+                        new RuntimeException("Theory test not found"));
+        if (!theoryTest.getCandidate().getId().equals(sessionUser.getId())) {
+            throw new RuntimeException("Access denied");
+        }
         if (theoryTest.getSubmittedAt() == null) {
             throw new RuntimeException("Theory test is not submitted yet");
         }
@@ -307,7 +383,159 @@ public class TheoryTestServiceImpl implements TheoryTestService {
                 correctAnswers,
                 candidateAnswers.size(),
                 new ArrayList<>(domainsToImprove),
-                questionResults
+                questionResults,
+                theoryTest.getStartedAt(),
+                theoryTest.getSubmittedAt()
         );
     }
+
+    @Override
+    public TheorySimulationProgressDto getMySimulationProgress(HttpSession httpSession) {
+
+        User sessionUser = (User) httpSession.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+        Candidate candidate = candidateRepository.findById(sessionUser.getId()).orElseThrow(() -> new RuntimeException("Candidate not found"));
+        List<Long> domainIds = getWeakDomainsFromRecentTests(candidate.getId());
+        List<Domain> domains = domainRepository.findAllById(domainIds);
+        return TheorySimulationProgressDto.builder()
+                .theoryClassesCount(candidate.getTheoryClassesCount())
+                .theorySimulationsCount(candidate.getTheorySimulationsCount())
+                .averageSimulationScore(candidate.getAverageSimulationScore() != null ? candidate.getAverageSimulationScore() : 0.0)
+                .domainsToImprove(domains)
+                .build();
+    }
+
+    @Override
+    public TheoryTest startFinalExam(HttpSession session){
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+        Candidate candidate = candidateRepository.findById(sessionUser.getId()).orElseThrow(() -> new RuntimeException("Candidate not found"));
+
+        if (candidate.getTheoryClassesCount() < 40) {
+            throw new RuntimeException("Candidate must attend all 40 theory classes before starting the final exam");
+        }
+        if (!hasValidMedicalExam(candidate)) {
+            throw new RuntimeException("Candidate must have a valid medical examination before starting the final exam.");
+        }
+
+        if (theoryTestRepository.existsByCandidateAndTestTypeAndPassed(candidate, TheoryTestType.FINAL_EXAM, true)) {
+            throw new RuntimeException("Candidate has already passed the final exam.");
+        }
+
+        TheoryTest theoryTest = new TheoryTest();
+        theoryTest.setCandidate(candidate);
+        theoryTest.setTestType(TheoryTestType.FINAL_EXAM);
+        theoryTest.setStartedAt(LocalDateTime.now());
+        theoryTest.setSubmittedAt(null);
+        theoryTest.setTimePerFinalExam(30);
+        theoryTest.setScore(0);
+        theoryTest.setPassed(false);
+
+        TheoryTest savedTest = theoryTestRepository.save(theoryTest);
+        List<Question> questions = generateRandomQuestions();
+        for (Question question : questions) {
+            TheoryTestQuestion theoryTestQuestion = new TheoryTestQuestion();
+            theoryTestQuestion.setTheoryTest(savedTest);
+            theoryTestQuestion.setQuestion(question);
+            theoryTestQuestionRepository.save(theoryTestQuestion);
+        }
+        return savedTest;
+    }
+
+    private boolean hasValidMedicalExam(Candidate candidate) {
+
+        List<MedicalExam> medicalExams = medicalExamRepository.findByCandidateId(candidate.getId());
+        return medicalExams.stream().anyMatch(exam -> "FIT".equals(exam.getMedResult())
+                        && exam.getDocsStatus() == DocumentStatus.ACTIVE
+                        && (exam.getDocsExpireDate() == null
+                        || !exam.getDocsExpireDate().isBefore(LocalDate.now()))
+        );
+    }
+
+    @Override
+    public TheoryExamProgressDto getMyFinalExamProgress(HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+
+        Candidate candidate = candidateRepository.findById(sessionUser.getId()).orElseThrow(() -> new RuntimeException("Candidate not found"));
+        List<TheoryTest> finalExams = theoryTestRepository.findByCandidateAndTestType(candidate, TheoryTestType.FINAL_EXAM);
+
+        List<TheoryExamAttemptDto> attempts = new ArrayList<>();
+        for (TheoryTest exam : finalExams) {
+            attempts.add(TheoryExamAttemptDto.builder()
+                            .theoryTestId(exam.getTheoryTestId())
+                            .score(exam.getScore())
+                            .passed(exam.getPassed())
+                            .submittedAt(exam.getSubmittedAt())
+                            .build()
+            );
+        }
+
+        return TheoryExamProgressDto.builder()
+                .theoryClassesCount(candidate.getTheoryClassesCount())
+                .theoryAttemptsCount(finalExams.size())
+                .attempts(attempts)
+                .build();
+    }
+
+
+    @Override
+    public TheoryExamTimerDto getFinalExamTimer(Long testId, HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+        TheoryTest test = theoryTestRepository.findById(testId).orElseThrow(() -> new RuntimeException("Test not found"));
+        if (!test.getCandidate().getId().equals(sessionUser.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+        if (test.getTestType() != TheoryTestType.FINAL_EXAM) {
+            throw new RuntimeException("Timer is available only for final exam");
+        }
+        return TheoryExamTimerDto.builder()
+                .startedAt(test.getStartedAt())
+                .timePerFinalExam(test.getTimePerFinalExam())
+                .build();
+    }
+
+    @Override
+    public CandidateTheoryReportDto getCandidateTheoryReport(HttpSession session) {
+
+        User sessionUser = (User) session.getAttribute("user");
+        if (sessionUser == null) {
+            throw new RuntimeException("User is not logged in");
+        }
+        Candidate candidate = candidateRepository.findById(sessionUser.getId()).orElseThrow(() -> new RuntimeException("Candidate not found"));
+
+        List<TheoryTest> simulationTests = theoryTestRepository.findByCandidateAndTestType(candidate, TheoryTestType.SIMULATION);
+        List<TheoryTest> finalExams = theoryTestRepository.findByCandidateAndTestType(candidate, TheoryTestType.FINAL_EXAM);
+
+        boolean finalExamPassed = finalExams.stream().anyMatch(test -> Boolean.TRUE.equals(test.getPassed()));
+
+        int bestFinalExamScore = finalExams.stream()
+                .filter(test -> test.getScore() != null)
+                .mapToInt(TheoryTest::getScore)
+                .max()
+                .orElse(0);
+
+        return CandidateTheoryReportDto.builder()
+                .candidateId(candidate.getId())
+                .candidateName(candidate.getFirstName() + " " + candidate.getLastName())
+                .theoryClassesCount(candidate.getTheoryClassesCount())
+                .simulationTestsCompleted(simulationTests.size())
+                .averageSimulationScore(candidate.getAverageSimulationScore() != null ? candidate.getAverageSimulationScore() : 0.0)
+                .finalExamAttempts(finalExams.size())
+                .finalExamPassed(finalExamPassed)
+                .bestFinalExamScore(bestFinalExamScore)
+                .build();
+    }
+
 }
