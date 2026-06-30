@@ -18,11 +18,9 @@ public class LessonLog {
     @Column(columnDefinition = "TEXT")
     private String instructorNote;
 
-    @Column
-    private Double nlpSentimentScore;
-
-    @Column
-    private String impression;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Impression impression;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "practical_class_id", nullable = false)
