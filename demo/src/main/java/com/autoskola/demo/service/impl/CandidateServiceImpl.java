@@ -4,6 +4,7 @@ import com.autoskola.demo.dto.*;
 import com.autoskola.demo.model.*;
 import com.autoskola.demo.repository.AdditionalLessonRequestRepository;
 import com.autoskola.demo.repository.CandidateRepository;
+import com.autoskola.demo.repository.LessonLogRepository;
 import com.autoskola.demo.repository.PaymentRepository;
 import com.autoskola.demo.service.CandidateService;
 
@@ -17,8 +18,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import com.autoskola.demo.model.Impression;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class CandidateServiceImpl implements CandidateService {
     private final PaymentRepository paymentRepository;
     private final AdditionalLessonRequestRepository additionalLessonRequestRepository;
     private final NotificationService notificationService;
+    private final LessonLogRepository lessonLogRepository;
 
     @Override
     public CandidateProfileDto getProfile(
@@ -459,7 +464,14 @@ public class CandidateServiceImpl implements CandidateService {
         }
 
         String weakness =
-                getMockWeakness(candidate.getId());
+                getWeaknessFromLessonLogs(candidate.getId());
+
+        if (weakness == null) {
+            return RecommendationDto.builder()
+                    .visible(false)
+                    .message("No active recommendations.")
+                    .build();
+        }
 
         return RecommendationDto.builder()
                 .visible(true)
@@ -471,25 +483,61 @@ public class CandidateServiceImpl implements CandidateService {
                 .build();
     }
 
-    private String getMockWeakness(Long candidateId) {
+    private String getWeaknessFromLessonLogs(Long candidateId) {
 
-        List<String> weaknesses = List.of(
-                "Parallel parking",
-                "Reverse driving",
-                "Hill start",
-                "Roundabout driving",
-                "Lane changing",
-                "Traffic signs",
-                "Intersection priority",
-                "Night driving",
-                "Pedestrian crossings",
-                "Speed control"
-        );
+        List<LessonLog> negativeLogs =
+                lessonLogRepository
+                        .findByPracticalClass_Candidate_IdAndImpression(
+                                candidateId,
+                                Impression.NEGATIVE
+                        );
 
-        int index =
-                Math.toIntExact(candidateId % weaknesses.size());
+        if (negativeLogs.isEmpty()) {
+            return null;
+        }
 
-        return weaknesses.get(index);
+        Map<String, Integer> topicCount =
+                new HashMap<>();
+
+        for (LessonLog log : negativeLogs) {
+
+            if (log.getTopic() == null) {
+                continue;
+            }
+
+            String topicName =
+                    log.getTopic().getName();
+
+            int currentCount =
+                    topicCount.getOrDefault(
+                            topicName,
+                            0
+                    );
+
+            topicCount.put(
+                    topicName,
+                    currentCount + 1
+            );
+        }
+
+        String selectedTopic = null;
+        int maxCount = 0;
+
+        for (Map.Entry<String, Integer> entry :
+                topicCount.entrySet()) {
+
+            if (entry.getValue() >= 2
+                    && entry.getValue() > maxCount) {
+
+                selectedTopic =
+                        entry.getKey();
+
+                maxCount =
+                        entry.getValue();
+            }
+        }
+
+        return selectedTopic;
     }
 
     @Override
@@ -503,7 +551,11 @@ public class CandidateServiceImpl implements CandidateService {
                         .findById(sessionUser.getId())
                         .orElseThrow();
 
-        String weakness = getMockWeakness(candidate.getId());
+        String weakness = getWeaknessFromLessonLogs(candidate.getId());
+
+        if (weakness == null) {
+            throw new RuntimeException("No active recommendation found.");
+        }
 
         AdditionalLessonRequest request =
                 AdditionalLessonRequest.builder()
@@ -538,7 +590,11 @@ public class CandidateServiceImpl implements CandidateService {
                         .orElseThrow();
 
         String weakness =
-                getMockWeakness(candidate.getId());
+                getWeaknessFromLessonLogs(candidate.getId());
+
+        if (weakness == null) {
+            throw new RuntimeException("No active recommendation found.");
+        }
 
         AdditionalLessonRequest request =
                 AdditionalLessonRequest.builder()
