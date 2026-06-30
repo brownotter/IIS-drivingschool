@@ -49,6 +49,6 @@ public class PracticalClass {
     @JoinColumn(name = "topic_id")
     private Topic topic;
 
-    @OneToOne(mappedBy = "practicalClass", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "practicalClass")
     private LessonLog lessonLog;
 }

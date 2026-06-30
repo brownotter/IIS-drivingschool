@@ -38,6 +38,11 @@ public class ExceptionHandlerController {
         return preparedResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(SchedulingConflictException.class)
+    public ResponseEntity<String> handleSchedulingConflict(SchedulingConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
     private ResponseEntity<ExceptionResponse> preparedResponse(HttpStatus httpStatus, String message) {
         ExceptionResponse response = new ExceptionResponse(httpStatus, LocalDateTime.now(), message);
         log.info("Exception: {}", response);
