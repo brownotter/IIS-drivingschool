@@ -45,6 +45,14 @@ public class DocumentServiceImpl implements DocumentService {
         Candidate candidate = getCandidateOrThrow(candidateId);
         Employee employee = getEmployeeOrThrow(employeeId);
 
+        long medicalExamCount = medicalExamRepository.findByCandidateId(candidateId)
+                .stream()
+                .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
+                .count();
+        if (medicalExamCount >= 1) {
+            throw new RuntimeException("Candidate already has a medical exam.");
+        }
+
         MedicalExam exam = MedicalExam.builder()
                 .docsTitle(dto.getDocsTitle())
                 .docsCreateDate(LocalDate.now())
@@ -68,6 +76,14 @@ public class DocumentServiceImpl implements DocumentService {
         Candidate candidate = getCandidateOrThrow(candidateId);
         Employee employee = getEmployeeOrThrow(employeeId);
 
+        long certificateCount = certificateRepository.findByCandidateId(candidateId)
+                .stream()
+                .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
+                .count();
+        if (certificateCount >= 3) {
+            throw new RuntimeException("Candidate already has 3 certificates.");
+        }
+
         Certificate cert = Certificate.builder()
                 .docsTitle(dto.getDocsTitle())
                 .docsCreateDate(LocalDate.now())
@@ -89,6 +105,14 @@ public class DocumentServiceImpl implements DocumentService {
         Candidate candidate = getCandidateOrThrow(candidateId);
         Employee employee = getEmployeeOrThrow(employeeId);
 
+        long examResultCount = examResultRepository.findByCandidateId(candidateId)
+                .stream()
+                .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
+                .count();
+        if (examResultCount >= 2) {
+            throw new RuntimeException("Candidate already has 2 exam results.");
+        }
+
         Contract contract = Contract.builder()
                 .docsTitle(dto.getDocsTitle())
                 .docsCreateDate(LocalDate.now())
@@ -109,6 +133,14 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentsDto createExamResult(Long candidateId, Long employeeId, ExamResultDto dto) {
         Candidate candidate = getCandidateOrThrow(candidateId);
         Employee employee = getEmployeeOrThrow(employeeId);
+
+        long examResultCount = examResultRepository.findByCandidateId(candidateId)
+                .stream()
+                .filter(doc -> doc.getDocsStatus() != DocumentStatus.ARCHIVED)
+                .count();
+        if (examResultCount >= 2) {
+            throw new RuntimeException("Candidate already has 2 exam results.");
+        }
 
         ExamResult result = ExamResult.builder()
                 .docsTitle(dto.getDocsTitle())
