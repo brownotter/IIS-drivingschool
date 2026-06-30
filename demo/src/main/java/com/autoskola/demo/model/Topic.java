@@ -21,7 +21,8 @@ public class Topic {
     @Column
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "area_id", nullable = false)
+    @Column
+    @Enumerated(EnumType.STRING)
     private Area area;
+
 }

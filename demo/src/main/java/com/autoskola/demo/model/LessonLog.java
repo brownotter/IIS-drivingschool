@@ -19,9 +19,6 @@ public class LessonLog {
     private String instructorNote;
 
     @Column
-    private Double nlpSentimentScore;
-
-    @Column
     private String impression;
 
     @OneToOne(fetch = FetchType.LAZY)
