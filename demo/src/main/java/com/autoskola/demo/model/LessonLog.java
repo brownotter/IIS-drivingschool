@@ -26,7 +26,7 @@ public class LessonLog {
     @JoinColumn(name = "practical_class_id", nullable = false)
     private PracticalClass practicalClass;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "topic_id")
     private Topic topic;
 }
