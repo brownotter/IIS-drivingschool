@@ -419,7 +419,6 @@ public class CandidateServiceImpl implements CandidateService {
 
     @Override
     public RecommendationDto getMyRecommendation(HttpSession session) {
-
         User sessionUser =
                 (User) session.getAttribute("user");
 
@@ -484,7 +483,6 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     private String getWeaknessFromLessonLogs(Long candidateId) {
-
         List<LessonLog> negativeLogs =
                 lessonLogRepository
                         .findByPracticalClass_Candidate_IdAndImpression(
@@ -496,53 +494,34 @@ public class CandidateServiceImpl implements CandidateService {
             return null;
         }
 
-        Map<String, Integer> topicCount =
-                new HashMap<>();
-
         for (LessonLog log : negativeLogs) {
 
             if (log.getTopic() == null) {
                 continue;
             }
 
-            String topicName =
-                    log.getTopic().getName();
+            String topic = log.getTopic().getName();
+            int count = 0;
 
-            int currentCount =
-                    topicCount.getOrDefault(
-                            topicName,
-                            0
-                    );
+            for (LessonLog secondLog : negativeLogs) {
 
-            topicCount.put(
-                    topicName,
-                    currentCount + 1
-            );
-        }
+                if (secondLog.getTopic() != null &&
+                        secondLog.getTopic().getName().equals(topic)) {
 
-        String selectedTopic = null;
-        int maxCount = 0;
+                    count++;
+                }
+            }
 
-        for (Map.Entry<String, Integer> entry :
-                topicCount.entrySet()) {
-
-            if (entry.getValue() >= 2
-                    && entry.getValue() > maxCount) {
-
-                selectedTopic =
-                        entry.getKey();
-
-                maxCount =
-                        entry.getValue();
+            if (count >= 2) {
+                return topic;
             }
         }
 
-        return selectedTopic;
+        return null;
     }
 
     @Override
     public String acceptRecommendation(HttpSession session) {
-
         User sessionUser =
                 (User) session.getAttribute("user");
 
